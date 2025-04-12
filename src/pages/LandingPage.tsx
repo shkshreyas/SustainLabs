@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useAnimation, useMotionValue } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Zap, Wind, Sun, Battery, ChevronDown, Globe, Shield, BarChart, ArrowUpRight, Play, Pause, CheckCircle, Server, Network, Cpu } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
@@ -12,19 +12,31 @@ const LandingPage = () => {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [hoveredFeature, setHoveredFeature] = useState(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const cursorRef = useRef(null);
+  const cursorAnimControls = useAnimation();
 
-  // Handle mouse movement for interactive background
+  // Handle mouse movement for interactive background and custom cursor
   useEffect(() => {
     const handleMouseMove = (e) => {
+      const { clientX, clientY } = e;
       setMousePosition({
-        x: (e.clientX / window.innerWidth) * 2 - 1,
-        y: (e.clientY / window.innerHeight) * 2 - 1
+        x: (clientX / window.innerWidth) * 2 - 1,
+        y: (clientY / window.innerHeight) * 2 - 1
       });
+      
+      // Update custom cursor position with a slight delay for smooth follow effect
+      if (cursorRef.current) {
+        cursorAnimControls.start({
+          x: clientX,
+          y: clientY,
+          transition: { type: "spring", mass: 0.1, stiffness: 800, damping: 30 }
+        });
+      }
     };
 
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
+  }, [cursorAnimControls]);
 
   // Handle scroll progress
   useEffect(() => {
@@ -128,69 +140,224 @@ const LandingPage = () => {
     }
   };
 
-  // Interactive background elements
+  // Enhanced interactive background with advanced visual effects
   const BackgroundElements = () => (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden">
-      {/* Animated gradient orbs */}
+    <div className="fixed inset-0 pointer-events-none overflow-hidden bg-gradient-to-br from-black via-gray-900 to-slate-900">
+      {/* Animated noise texture overlay */}
+      <div className="absolute inset-0 opacity-20 mix-blend-overlay">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <filter id="noiseFilter">
+            <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
+            <feColorMatrix type="saturate" values="0" />
+          </filter>
+          <rect width="100%" height="100%" filter="url(#noiseFilter)" />
+        </svg>
+      </div>
+      
+      {/* Geometric network lines */}
+      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <motion.path 
+          d="M0,50 Q25,30 50,50 T100,50" 
+          stroke="rgba(74, 222, 128, 0.15)" 
+          strokeWidth="0.2" 
+          fill="none"
+          animate={{
+            d: [
+              "M0,50 Q25,30 50,50 T100,50",
+              "M0,50 Q25,70 50,50 T100,50",
+              "M0,50 Q25,30 50,50 T100,50",
+            ]
+          }}
+          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.path 
+          d="M0,40 Q40,60 80,40 T100,40" 
+          stroke="rgba(59, 130, 246, 0.15)" 
+          strokeWidth="0.2" 
+          fill="none"
+          animate={{
+            d: [
+              "M0,40 Q40,60 80,40 T100,40",
+              "M0,40 Q40,20 80,40 T100,40",
+              "M0,40 Q40,60 80,40 T100,40",
+            ]
+          }}
+          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.path 
+          d="M0,60 Q60,40 30,60 T100,60" 
+          stroke="rgba(139, 92, 246, 0.15)" 
+          strokeWidth="0.2" 
+          fill="none"
+          animate={{
+            d: [
+              "M0,60 Q60,40 30,60 T100,60",
+              "M0,60 Q60,80 30,60 T100,60",
+              "M0,60 Q60,40 30,60 T100,60",
+            ]
+          }}
+          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+        />
+      </svg>
+
+      {/* 3D animated orbs with light effects */}
       <motion.div
-        className="absolute w-96 h-96 rounded-full bg-green-500/20 blur-3xl"
+        className="absolute w-[800px] h-[800px] rounded-full bg-gradient-to-r from-green-500/10 to-blue-500/10 blur-[100px]"
         animate={{
           x: mousePosition.x * 20,
           y: mousePosition.y * 20,
-          scale: [1, 1.1, 1],
+          scale: [1, 1.05, 1],
+          rotateZ: [0, 5, 0],
         }}
-        transition={{ duration: 2, repeat: Infinity }}
+        transition={{ duration: 3, repeat: Infinity, repeatType: "reverse" }}
         style={{
-          left: '20%',
+          left: '10%',
           top: '20%',
+          transform: 'translate3d(0, 0, 0)',
+          backfaceVisibility: 'hidden',
         }}
       />
+      
       <motion.div
-        className="absolute w-96 h-96 rounded-full bg-blue-500/20 blur-3xl"
+        className="absolute w-[600px] h-[600px] rounded-full bg-gradient-to-r from-purple-500/10 to-pink-500/10 blur-[80px]"
         animate={{
-          x: mousePosition.x * -20,
-          y: mousePosition.y * -20,
+          x: mousePosition.x * -15,
+          y: mousePosition.y * -15,
           scale: [1.1, 1, 1.1],
+          rotateZ: [0, -5, 0],
         }}
-        transition={{ duration: 2, repeat: Infinity }}
+        transition={{ duration: 4, repeat: Infinity, repeatType: "reverse" }}
         style={{
-          right: '20%',
+          right: '10%',
           bottom: '20%',
+          transform: 'translate3d(0, 0, 0)',
+          backfaceVisibility: 'hidden',
         }}
       />
 
-      {/* Animated grid */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:100px_100px] [mask-image:radial-gradient(ellipse_at_center,black_20%,transparent_70%)]" />
+      {/* 3D glow effect */}
+      <motion.div
+        className="absolute w-full h-full"
+        style={{
+          background: 'radial-gradient(circle at center, rgba(74, 222, 128, 0.03) 0%, transparent 70%)',
+          transform: `translate(${mousePosition.x * 20}px, ${mousePosition.y * 20}px)`,
+        }}
+        animate={{
+          scale: [1, 1.05, 1],
+        }}
+        transition={{ duration: 5, repeat: Infinity }}
+      />
 
-      {/* Floating particles */}
-      <div className="absolute inset-0">
-        {Array.from({ length: 20 }).map((_, i) => (
-          <motion.div
+      {/* Advanced grid with 3D perspective */}
+      <div 
+        className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:100px_100px]"
+        style={{
+          perspective: '1000px',
+          transform: `rotateX(${mousePosition.y * 2}deg) rotateY(${mousePosition.x * 2}deg)`,
+          maskImage: 'radial-gradient(ellipse at center, black 30%, transparent 80%)',
+          WebkitMaskImage: 'radial-gradient(ellipse at center, black 30%, transparent 80%)',
+        }}
+      />
+
+      {/* Horizontal light beam with parallax effect */}
+      <motion.div
+        className="absolute h-px w-full bg-gradient-to-r from-transparent via-blue-500/20 to-transparent"
+        style={{ top: '50%' }}
+        animate={{ 
+          y: [0, 30, 0, -30, 0],
+          opacity: [0.1, 0.3, 0.1],
+        }}
+        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+      />
+
+      {/* Modern floating particles with glow effect */}
+      {Array.from({ length: 40 }).map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute rounded-full opacity-60"
+          style={{
+            background: `radial-gradient(circle at center, ${
+              i % 3 === 0 ? 'rgba(74, 222, 128, 0.8)' : 
+              i % 3 === 1 ? 'rgba(59, 130, 246, 0.8)' : 
+              'rgba(139, 92, 246, 0.8)'
+            }, transparent)`,
+            width: `${Math.random() * 2 + 1}px`,
+            height: `${Math.random() * 2 + 1}px`,
+            boxShadow: `0 0 10px 2px ${
+              i % 3 === 0 ? 'rgba(74, 222, 128, 0.3)' : 
+              i % 3 === 1 ? 'rgba(59, 130, 246, 0.3)' : 
+              'rgba(139, 92, 246, 0.3)'
+            }`,
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+          }}
+          animate={{
+            x: [0, Math.random() * 100 - 50],
+            y: [0, Math.random() * 100 - 50],
+            opacity: [0, 1, 0],
+          }}
+          transition={{
+            duration: Math.random() * 15 + 10,
+            repeat: Infinity,
+            repeatType: "loop",
+            ease: "easeInOut",
+            delay: Math.random() * 5,
+          }}
+        />
+      ))}
+      
+      {/* Digital circuit lines */}
+      <svg className="absolute inset-0 w-full h-full opacity-10" viewBox="0 0 100 100" preserveAspectRatio="none">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <motion.path
             key={i}
-            className="absolute w-1 h-1 bg-green-500/30 rounded-full"
-            initial={{
-              x: Math.random() * 100,
-              y: Math.random() * 100,
-            }}
+            d={`M${Math.random() * 20},${10 + i * 15} H${80 + Math.random() * 20}`}
+            stroke={
+              i % 3 === 0 ? 'rgba(74, 222, 128, 0.6)' : 
+              i % 3 === 1 ? 'rgba(59, 130, 246, 0.6)' : 
+              'rgba(139, 92, 246, 0.6)'
+            }
+            strokeWidth="0.2"
+            strokeDasharray="3,3"
+            fill="none"
             animate={{
-              x: Math.random() * 100,
-              y: Math.random() * 100,
-              scale: [0, 1, 0],
+              pathLength: [0, 1],
+              pathOffset: [0, 1],
+              opacity: [0.2, 0.6, 0.2],
             }}
             transition={{
-              duration: Math.random() * 5 + 3,
+              duration: 10 + i * 2,
               repeat: Infinity,
-              repeatType: 'loop',
+              ease: "linear",
             }}
           />
         ))}
-      </div>
+      </svg>
     </div>
   );
 
+  // Custom cursor
+  const CustomCursor = () => (
+    <motion.div
+      ref={cursorRef}
+      className="fixed top-0 left-0 pointer-events-none z-50 mix-blend-difference"
+      style={{ x: 0, y: 0 }}
+      animate={cursorAnimControls}
+    >
+      <motion.div
+        className="w-6 h-6 rounded-full border border-white"
+        initial={{ scale: 1 }}
+        animate={{ scale: [1, 1.2, 1], opacity: [1, 0.8, 1] }}
+        transition={{ duration: 2, repeat: Infinity }}
+        style={{ translateX: "-50%", translateY: "-50%" }}
+      />
+    </motion.div>
+  );
+
   return (
-    <div className="min-h-screen bg-base-200 text-base-content relative">
+    <div className="min-h-screen text-white relative">
       <BackgroundElements />
+      <CustomCursor />
 
       {/* Navigation Progress */}
       <motion.div
@@ -236,6 +403,7 @@ const LandingPage = () => {
               backgroundClip: 'text',
               WebkitBackgroundClip: 'text',
               color: 'transparent',
+              textShadow: '0 0 40px rgba(74, 222, 128, 0.3)'
             }}
           >
             SusTainLabs

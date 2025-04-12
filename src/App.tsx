@@ -1,5 +1,5 @@
 import React, { lazy, Suspense, useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -44,11 +44,16 @@ const LoadingSpinner = () => (
   </div>
 );
 
-const App: React.FC = () => {
+// AppContent component to conditionally render Navbar
+const AppContent = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const { isAuthenticated } = useAuthStore();
   const { setChatOpen } = useAppStore();
   const { fetchSites, fetchMarketplaceItems } = useDataStore();
+  const location = useLocation();
+
+  // Check if current route is landing page
+  const isLandingPage = location.pathname === "/";
 
   // Effect to load initial data
   useEffect(() => {
@@ -64,74 +69,83 @@ const App: React.FC = () => {
   }, [isChatOpen, setChatOpen]);
 
   return (
+    <div className="min-h-screen bg-base-200 text-base-content">
+      {/* Only render Navbar when not on landing page */}
+      {!isLandingPage && <Navbar />}
+      
+      <main className={`container mx-auto px-4 ${isLandingPage ? '' : 'py-8'}`}>
+        <Suspense fallback={<LoadingSpinner />}>
+          <Routes>
+            {/* Public routes */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+
+            {/* Protected routes */}
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            } />
+            <Route path="/marketplace" element={
+              <ProtectedRoute>
+                <Marketplace />
+              </ProtectedRoute>
+            } />
+            <Route path="/renewable-energy" element={
+              <ProtectedRoute>
+                <RenewableEnergy />
+              </ProtectedRoute>
+            } />
+            <Route path="/gamification" element={
+              <ProtectedRoute>
+                <Gamification />
+              </ProtectedRoute>
+            } />
+            <Route path="/network" element={
+              <ProtectedRoute>
+                <NetworkOptimizer />
+              </ProtectedRoute>
+            } />
+            <Route path="/disaster-monitoring" element={
+              <ProtectedRoute>
+                <DisasterMonitoring />
+              </ProtectedRoute>
+            } />
+            <Route path="/maintenance" element={
+              <ProtectedRoute>
+                <Maintenance />
+              </ProtectedRoute>
+            } />
+
+            {/* Special routes */}
+            <Route path="/unauthorized" element={<UnauthorizedPage />} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </Suspense>
+      </main>
+      
+      {!isLandingPage && <Footer />}
+
+      <FloatingChatButton onClick={() => setIsChatOpen(true)} />
+      <ChatModal
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+        ChatComponent={InteractiveAIChatbot}
+      />
+    </div>
+  );
+};
+
+const App: React.FC = () => {
+  return (
     <Router>
-      <div className="min-h-screen bg-base-200 text-base-content">
-        <Navbar />
-        <main className="container mx-auto px-4 py-8">
-          <Suspense fallback={<LoadingSpinner />}>
-            <Routes>
-              {/* Public routes */}
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-
-              {/* Protected routes */}
-              <Route path="/dashboard" element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/profile" element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              } />
-              <Route path="/marketplace" element={
-                <ProtectedRoute>
-                  <Marketplace />
-                </ProtectedRoute>
-              } />
-              <Route path="/renewable-energy" element={
-                <ProtectedRoute>
-                  <RenewableEnergy />
-                </ProtectedRoute>
-              } />
-              <Route path="/gamification" element={
-                <ProtectedRoute>
-                  <Gamification />
-                </ProtectedRoute>
-              } />
-              <Route path="/network" element={
-                <ProtectedRoute>
-                  <NetworkOptimizer />
-                </ProtectedRoute>
-              } />
-              <Route path="/disaster-monitoring" element={
-                <ProtectedRoute>
-                  <DisasterMonitoring />
-                </ProtectedRoute>
-              } />
-              <Route path="/maintenance" element={
-                <ProtectedRoute>
-                  <Maintenance />
-                </ProtectedRoute>
-              } />
-
-              {/* Special routes */}
-              <Route path="/unauthorized" element={<UnauthorizedPage />} />
-              <Route path="*" element={<NotFoundPage />} />
-            </Routes>
-          </Suspense>
-        </main>
-        <Footer />
-
-        <FloatingChatButton onClick={() => setIsChatOpen(true)} />
-        <ChatModal
-          isOpen={isChatOpen}
-          onClose={() => setIsChatOpen(false)}
-          ChatComponent={InteractiveAIChatbot}
-        />
-      </div>
+      <AppContent />
     </Router>
   );
 };

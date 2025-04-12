@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Star, Target, Award, Zap, Network, Server, Battery, Cloud, ChevronDown, Users, BarChart2, Settings } from 'lucide-react';
+import { Trophy, Star, Target, Award, Zap, Network, Server, Battery, Cloud, ChevronDown, Users, BarChart2, BookOpen, UserRound, FileText, MessageSquare, PlaySquare } from 'lucide-react';
+import LearningRoadmap from '../components/learning/LearningRoadmap';
+import InterviewPrep from '../components/learning/interview';
+import ResumeProcessor from '../components/learning/resume';
+import Chatbot from '../components/learning/aichatsustain';
+import YouTubeLearning from '../components/learning/YouTubeLearning';
 
 const EnhancedGamification = () => {
   // State management
@@ -14,6 +19,16 @@ const EnhancedGamification = () => {
   const [showAchievement, setShowAchievement] = useState(false);
   const [userPoints, setUserPoints] = useState(8750);
   const [selectedChallenge, setSelectedChallenge] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const achievements = [
     {
@@ -127,21 +142,38 @@ const EnhancedGamification = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 p-1 md:p-6">
       {/* Navigation */}
-      <div className="navbar bg-base-200 rounded-box mb-6">
+      <div className="navbar bg-base-200 rounded-box mb-2 md:mb-6 p-1 md:p-2">
         <div className="flex-1">
-          <div className="btn btn-ghost text-xl">Sustainability Hub</div>
+          <div className="btn btn-ghost text-sm md:text-xl px-2 md:px-4">EcoNexus Learning</div>
         </div>
-        <div className="flex-none">
+        <div className="flex-none w-auto max-w-[70%] md:max-w-none overflow-x-auto hide-scrollbar">
           <div className="tabs tabs-boxed bg-base-300">
-            {['dashboard', 'challenges', 'stats', 'settings'].map(tab => (
+            {[
+              { id: 'dashboard', label: 'Dashboard', icon: BarChart2 },
+              { id: 'interview', label: 'Interview Prep', icon: UserRound },
+              { id: 'resume', label: 'Resume Builder', icon: FileText },
+              { id: 'learning', label: 'Learning Paths', icon: BookOpen },
+              { id: 'videos', label: 'Learning Videos', icon: PlaySquare },
+              { id: 'aichat', label: 'AI Assistant', icon: MessageSquare }
+            ].map(tab => (
               <a
-                key={tab}
-                className={`tab ${activeTab === tab ? 'tab-active' : ''}`}
-                onClick={() => setActiveTab(tab)}
+                key={tab.id}
+                className={`tab gap-1 ${activeTab === tab.id ? 'tab-active' : ''}`}
+                onClick={() => setActiveTab(tab.id)}
               >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                <tab.icon className="w-3 h-3 md:w-4 md:h-4" />
+                <span className="text-xs md:text-sm whitespace-nowrap">
+                  {isMobile ? 
+                    (tab.id === 'interview' ? 'Interview' : 
+                     tab.id === 'learning' ? 'Learn' : 
+                     tab.id === 'resume' ? 'Resume' : 
+                     tab.id === 'dashboard' ? 'Home' : 
+                     tab.id === 'videos' ? 'Videos' :
+                     tab.id === 'aichat' ? 'Chat' : tab.label.substring(0, 6)) 
+                    : tab.label}
+                </span>
               </a>
             ))}
           </div>
@@ -155,138 +187,172 @@ const EnhancedGamification = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
-          className="space-y-6"
+          className="space-y-2 md:space-y-6"
         >
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {networkMetrics.map((metric, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.1 }}
-                className="card bg-base-200 shadow-xl"
-              >
-                <div className="card-body">
-                  <div className="flex items-center justify-between">
-                    <h2 className="card-title text-base-content">{metric.title}</h2>
-                    <metric.icon className={`w-6 h-6 ${metric.color}`} />
-                  </div>
-                  <div className="flex items-end justify-between mt-2">
-                    <p className="text-2xl font-bold">{metric.value}</p>
-                    <div className={`badge ${metric.trend === 'up' ? 'badge-success' : 'badge-warning'}`}>
-                      {metric.change}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Challenges Section */}
-          <div className="card bg-base-200 shadow-xl">
-            <div className="card-body">
-              <h2 className="card-title text-2xl mb-4">Active Challenges</h2>
-              <div className="space-y-4">
-                {achievements.map((achievement, index) => (
+          {activeTab === 'learning' ? (
+            <div className="card bg-base-200 shadow-xl overflow-hidden">
+              <div className="card-body p-1 md:p-4">
+                <LearningRoadmap className="text-base-content" />
+              </div>
+            </div>
+          ) : activeTab === 'interview' ? (
+            <div className="card bg-base-200 shadow-xl overflow-hidden">
+              <div className="card-body p-0 md:p-4">
+                <InterviewPrep />
+              </div>
+            </div>
+          ) : activeTab === 'resume' ? (
+            <div className="card bg-base-200 shadow-xl overflow-hidden">
+              <div className="card-body p-0 md:p-4">
+                <ResumeProcessor />
+              </div>
+            </div>
+          ) : activeTab === 'aichat' ? (
+            <div className="card bg-base-200 shadow-xl overflow-hidden h-[calc(100vh-100px)]">
+              <div className="card-body p-0 md:p-4 h-full">
+                <Chatbot />
+              </div>
+            </div>
+          ) : activeTab === 'videos' ? (
+            <div className="card bg-base-200 shadow-xl overflow-hidden">
+              <div className="card-body p-0 md:p-4">
+                <YouTubeLearning />
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Stats Cards */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
+                {networkMetrics.map((metric, index) => (
                   <motion.div
-                    key={achievement.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
+                    key={index}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: index * 0.1 }}
-                    className="collapse collapse-arrow bg-base-300"
+                    className="card bg-base-200 shadow-xl"
                   >
-                    <input type="radio" name="challenges-accordion" />
-                    <div className="collapse-title text-xl font-medium">
+                    <div className="card-body p-2 md:p-4">
                       <div className="flex items-center justify-between">
-                        <span>{achievement.title}</span>
-                        <div className="badge badge-primary">{achievement.deadline}</div>
+                        <h2 className="card-title text-xs md:text-base text-base-content">{metric.title}</h2>
+                        <metric.icon className={`w-4 h-4 md:w-6 md:h-6 ${metric.color}`} />
                       </div>
-                    </div>
-                    <div className="collapse-content">
-                      <p className="text-base-content/80 mb-4">{achievement.description}</p>
-                      <progress
-                        className="progress progress-success w-full mb-4"
-                        value={achievement.progress}
-                        max="100"
-                      ></progress>
-                      <div className="space-y-2">
-                        {achievement.tasks.map((task, taskIndex) => (
-                          <div
-                            key={taskIndex}
-                            className="flex items-center justify-between p-2 bg-base-200 rounded-lg"
-                          >
-                            <span className={task.complete ? 'line-through opacity-50' : ''}>
-                              {task.name}
-                            </span>
-                            <button
-                              className={`btn btn-sm ${task.complete ? 'btn-disabled' : 'btn-primary'}`}
-                              onClick={() => completeTask(achievement.id, taskIndex)}
-                              disabled={task.complete}
-                            >
-                              {task.complete ? 'Completed' : 'Complete'}
-                            </button>
-                          </div>
-                        ))}
+                      <div className="flex items-end justify-between mt-1 md:mt-2">
+                        <p className="text-lg md:text-2xl font-bold">{metric.value}</p>
+                        <div className={`badge badge-xs md:badge-md ${metric.trend === 'up' ? 'badge-success' : 'badge-warning'}`}>
+                          {metric.change}
+                        </div>
                       </div>
                     </div>
                   </motion.div>
                 ))}
               </div>
-            </div>
-          </div>
 
-          {/* Leaderboard */}
-          <div className="card bg-base-200 shadow-xl">
-            <div className="card-body">
-              <h2 className="card-title text-2xl mb-4">Global Rankings</h2>
-              <div className="overflow-x-auto">
-                <table className="table w-full">
-                  <thead>
-                    <tr>
-                      <th>Rank</th>
-                      <th>Company</th>
-                      <th>Points</th>
-                      <th>Trend</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {leaderboard.map((company, index) => (
-                      <motion.tr
-                        key={index}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
+              {/* Challenges Section */}
+              <div className="card bg-base-200 shadow-xl">
+                <div className="card-body p-2 md:p-6">
+                  <h2 className="card-title text-lg md:text-2xl mb-1 md:mb-4">Learning Achievements</h2>
+                  <div className="space-y-1 md:space-y-4">
+                    {achievements.map((achievement, index) => (
+                      <motion.div
+                        key={achievement.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.1 }}
-                        className={index < 3 ? 'font-bold' : ''}
+                        className="collapse collapse-arrow bg-base-300"
                       >
-                        <td>
-                          <div className={`badge ${
-                            index === 0 ? 'badge-warning' :
-                            index === 1 ? 'badge-secondary' :
-                            index === 2 ? 'badge-accent' :
-                            'badge-ghost'
-                          }`}>
-                            #{company.rank}
+                        <input type="radio" name="challenges-accordion" />
+                        <div className="collapse-title text-sm md:text-xl font-medium py-1 md:py-2 min-h-0 md:min-h-[3rem]">
+                          <div className="flex items-center justify-between flex-wrap gap-1 md:gap-2">
+                            <span className="text-xs md:text-base">{achievement.title}</span>
+                            <div className="badge badge-primary badge-xs md:badge-md">{achievement.deadline}</div>
                           </div>
-                        </td>
-                        <td>{company.name}</td>
-                        <td>{company.points.toLocaleString()}</td>
-                        <td>
-                          <div className={`badge ${
-                            company.trend === 'up' ? 'badge-success' :
-                            company.trend === 'down' ? 'badge-error' :
-                            'badge-ghost'
-                          }`}>
-                            {company.trend}
+                        </div>
+                        <div className="collapse-content py-1 md:py-2">
+                          <p className="text-xs md:text-sm text-base-content/80 mb-1 md:mb-4">{achievement.description}</p>
+                          <progress
+                            className="progress progress-success w-full mb-1 md:mb-4"
+                            value={achievement.progress}
+                            max="100"
+                          ></progress>
+                          <div className="space-y-1 md:space-y-2">
+                            {achievement.tasks.map((task, taskIndex) => (
+                              <div
+                                key={taskIndex}
+                                className="flex items-center justify-between p-1 md:p-2 bg-base-200 rounded-lg"
+                              >
+                                <span className={`text-xs md:text-sm ${task.complete ? 'line-through opacity-50' : ''}`}>
+                                  {task.name}
+                                </span>
+                                <button
+                                  className={`btn btn-xs md:btn-sm ${task.complete ? 'btn-disabled' : 'btn-primary'}`}
+                                  onClick={() => completeTask(achievement.id, taskIndex)}
+                                  disabled={task.complete}
+                                >
+                                  {task.complete ? (isMobile ? '✓' : 'Completed') : (isMobile ? 'Do' : 'Complete')}
+                                </button>
+                              </div>
+                            ))}
                           </div>
-                        </td>
-                      </motion.tr>
+                        </div>
+                      </motion.div>
                     ))}
-                  </tbody>
-                </table>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+
+              {/* Leaderboard */}
+              <div className="card bg-base-200 shadow-xl">
+                <div className="card-body p-2 md:p-6">
+                  <h2 className="card-title text-lg md:text-2xl mb-1 md:mb-4">Learning Leaderboard</h2>
+                  <div className="overflow-x-auto">
+                    <table className="table table-xs md:table-md w-full">
+                      <thead>
+                        <tr>
+                          <th className="text-xs md:text-sm">Rank</th>
+                          <th className="text-xs md:text-sm">Company</th>
+                          <th className="text-xs md:text-sm">Points</th>
+                          <th className="text-xs md:text-sm">Trend</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {leaderboard.map((company, index) => (
+                          <motion.tr
+                            key={index}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: index * 0.1 }}
+                            className={index < 3 ? 'font-bold' : ''}
+                          >
+                            <td>
+                              <div className={`badge badge-xs md:badge-sm ${
+                                index === 0 ? 'badge-warning' :
+                                index === 1 ? 'badge-secondary' :
+                                index === 2 ? 'badge-accent' :
+                                'badge-ghost'
+                              }`}>
+                                #{company.rank}
+                              </div>
+                            </td>
+                            <td className="text-xs md:text-sm">{isMobile ? company.name.substring(0, 10) + (company.name.length > 10 ? '...' : '') : company.name}</td>
+                            <td className="text-xs md:text-sm">{company.points.toLocaleString()}</td>
+                            <td>
+                              <div className={`badge badge-xs md:badge-sm ${
+                                company.trend === 'up' ? 'badge-success' :
+                                company.trend === 'down' ? 'badge-error' :
+                                'badge-ghost'
+                              }`}>
+                                {company.trend}
+                              </div>
+                            </td>
+                          </motion.tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </motion.div>
       </AnimatePresence>
 
@@ -297,15 +363,30 @@ const EnhancedGamification = () => {
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
-            className="toast toast-end"
+            className="toast toast-end z-50"
           >
-            <div className="alert alert-success">
-              <Trophy className="w-6 h-6" />
+            <div className="alert alert-success text-xs md:text-sm py-1 md:py-3">
+              <Trophy className="w-4 h-4 md:w-6 md:h-6" />
               <span>Achievement unlocked! +100 points</span>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+      
+      {/* Subscribe to Newsletter */}
+      <div className="card bg-base-200 shadow-xl mt-4 md:mt-6">
+        <div className="card-body p-2 md:p-6">
+          <h2 className="text-sm md:text-lg font-bold text-base-content">Subscribe to Our Newsletter and Get Updated to our Latest Announcement</h2>
+          <div className="flex flex-col sm:flex-row gap-2 mt-2">
+            <input 
+              type="email" 
+              placeholder="Enter your email" 
+              className="input input-bordered w-full"
+            />
+            <button className="btn btn-primary">Subscribe</button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

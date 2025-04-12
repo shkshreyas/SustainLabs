@@ -188,9 +188,9 @@ Format the response with bold headings (e.g., **Key Strengths Demonstrated:**) a
 
   const renderJobInput = () => (
     <div className="bg-white min-h-screen flex flex-col items-center justify-center p-4">
-      <h1 className="text-4xl font-bold text-purple-600 mb-8">Custom Interview Preparation</h1>
+      <h1 className="text-2xl md:text-4xl font-bold text-purple-600 mb-8">Custom Interview Preparation</h1>
       
-      <div className="w-full max-w-2xl bg-purple-50 p-8 rounded-lg shadow-2xl">
+      <div className="w-full max-w-2xl bg-purple-50 p-4 md:p-8 rounded-lg shadow-2xl">
         <div className="mb-4">
           <label className="block text-purple-800 mb-2 font-semibold">Job Role</label>
           <input 
@@ -215,12 +215,12 @@ Format the response with bold headings (e.g., **Key Strengths Demonstrated:**) a
 
         <div className="mb-6">
           <label className="block text-purple-800 mb-2 font-semibold">Number of Questions</label>
-          <div className="flex space-x-4">
+          <div className="flex flex-wrap gap-2">
             {[5, 10, 15, 20].map(count => (
               <button 
                 key={count}
                 onClick={() => setQuestionCount(count)}
-                className={`px-4 py-2 rounded-full transition-all ${
+                className={`px-3 py-2 rounded-full transition-all ${
                   questionCount === count 
                     ? 'bg-purple-600 text-white shadow-lg' 
                     : 'bg-purple-100 text-purple-800 hover:bg-purple-200'
@@ -254,10 +254,10 @@ Format the response with bold headings (e.g., **Key Strengths Demonstrated:**) a
   );
 
   const renderInterviewStage = () => (
-    <div className="bg-white min-h-screen flex items-center justify-center p-8">
-      <div className="w-full max-w-6xl grid grid-cols-12 gap-8">
+    <div className="bg-white min-h-screen flex items-center justify-center p-4">
+      <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-8">
 
-        <div className="col-span-6 bg-purple-100 rounded-lg overflow-hidden h-[600px] shadow-xl">
+        <div className="md:col-span-6 bg-purple-100 rounded-lg overflow-hidden h-[300px] md:h-[600px] shadow-xl">
           <video 
             ref={videoRef} 
             autoPlay 
@@ -266,18 +266,18 @@ Format the response with bold headings (e.g., **Key Strengths Demonstrated:**) a
           />
         </div>
 
-        <div className="col-span-6 bg-purple-50 rounded-lg p-6 flex flex-col shadow-xl">
-          <h2 className="text-2xl font-bold mb-4 text-purple-800">
+        <div className="md:col-span-6 bg-purple-50 rounded-lg p-4 md:p-6 flex flex-col shadow-xl">
+          <h2 className="text-xl md:text-2xl font-bold mb-4 text-purple-800">
             {jobRole} Interview
           </h2>
 
-          <div className="mb-6 flex-grow">
-            <p className="text-lg text-purple-900">
+          <div className="mb-4 md:mb-6 flex-grow">
+            <p className="text-base md:text-lg text-purple-900">
               {generatedQuestions[currentQuestionIndex].question}
             </p>
           </div>
 
-          <div className="flex space-x-4 mb-6">
+          <div className="flex flex-wrap gap-2 mb-4 md:mb-6">
             <button 
               onClick={startRecording}
               disabled={isRecording}
@@ -295,15 +295,15 @@ Format the response with bold headings (e.g., **Key Strengths Demonstrated:**) a
           </div>
 
           {userAnswer && (
-            <div className="bg-purple-100 p-4 rounded-lg mb-4">
-              <h3 className="font-bold mb-2 text-purple-800">Your Answer:</h3>
+            <div className="bg-purple-100 p-3 rounded-lg mb-3 md:mb-4 text-sm md:text-base">
+              <h3 className="font-bold mb-1 md:mb-2 text-purple-800">Your Answer:</h3>
               <p className="text-purple-900">{userAnswer}</p>
             </div>
           )}
 
           {aiEvaluation && (
-            <div className="bg-purple-100 p-4 rounded-lg mb-4">
-              <h3 className="font-bold mb-2 text-purple-800">AI Evaluation:</h3>
+            <div className="bg-purple-100 p-3 rounded-lg mb-3 md:mb-4 text-sm md:text-base">
+              <h3 className="font-bold mb-1 md:mb-2 text-purple-800">AI Evaluation:</h3>
               <div className="text-purple-900 whitespace-pre-line">
                 {aiEvaluation.split('\n').map((line, index) => {
                   if (line.startsWith('**')) {
@@ -315,15 +315,15 @@ Format the response with bold headings (e.g., **Key Strengths Demonstrated:**) a
             </div>
           )}
 
-          <div className="flex justify-between mt-auto gap-2">
+          <div className="flex flex-wrap justify-between mt-auto gap-2">
             <button 
               onClick={evaluateAnswer}
               disabled={isLoading}
-              className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors flex items-center"
+              className="bg-purple-600 text-white px-3 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors flex items-center text-sm md:text-base"
             >
               {isLoading ? (
                 <span className="flex items-center">
-                  <svg className="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24">
+                  <svg className="animate-spin h-4 w-4 mr-2" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
@@ -341,7 +341,7 @@ Format the response with bold headings (e.g., **Key Strengths Demonstrated:**) a
                   setUserAnswer(userAnswers[currentQuestionIndex - 1] || '');
                   setAiEvaluation('');
                 }}
-                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                className="bg-blue-500 text-white px-3 py-2 rounded-lg hover:bg-blue-600 transition-colors text-sm md:text-base"
               >
                 Previous Question
               </button>
@@ -355,7 +355,7 @@ Format the response with bold headings (e.g., **Key Strengths Demonstrated:**) a
                   setUserAnswer('');
                   setAiEvaluation('');
                 }}
-                className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
+                className="bg-green-500 text-white px-3 py-2 rounded-lg hover:bg-green-600 transition-colors text-sm md:text-base"
               >
                 Next Question
               </button>
@@ -363,11 +363,11 @@ Format the response with bold headings (e.g., **Key Strengths Demonstrated:**) a
               <button 
                 onClick={generateOverallFeedback}
                 disabled={isLoading}
-                className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors flex items-center"
+                className="bg-purple-600 text-white px-3 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors flex items-center text-sm md:text-base"
               >
                 {isLoading ? (
                   <span className="flex items-center">
-                    <svg className="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24">
+                    <svg className="animate-spin h-4 w-4 mr-2" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
@@ -386,12 +386,12 @@ Format the response with bold headings (e.g., **Key Strengths Demonstrated:**) a
 
   const renderOverallFeedback = () => (
     <div className="bg-white min-h-screen flex flex-col items-center justify-center p-4">
-      <h1 className="text-4xl font-bold text-purple-600 mb-8">Interview Feedback</h1>
+      <h1 className="text-2xl md:text-4xl font-bold text-purple-600 mb-8">Interview Feedback</h1>
       
-      <div className="w-full max-w-2xl bg-purple-50 p-8 rounded-lg shadow-2xl">
-        <h2 className="text-2xl font-bold mb-4 text-purple-800">Overall Feedback</h2>
+      <div className="w-full max-w-2xl bg-purple-50 p-4 md:p-8 rounded-lg shadow-2xl">
+        <h2 className="text-xl md:text-2xl font-bold mb-4 text-purple-800">Overall Feedback</h2>
         <div className="bg-purple-100 p-4 rounded-lg">
-          <div className="text-purple-900 whitespace-pre-line">
+          <div className="text-purple-900 whitespace-pre-line text-sm md:text-base">
             {overallFeedback.split('\n').map((line, index) => {
               if (line.startsWith('**')) {
                 return <p key={index} className="font-bold">{line.replace(/\*\*/g, '')}</p>;

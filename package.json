@@ -16,6 +16,7 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@faker-js/faker": "^8.4.1",
+    "@google/generative-ai": "^0.24.0",
     "@picovoice/web-voice-processor": "^4.0.9",
     "@tensorflow-models/blazeface": "^0.1.0",
     "@tensorflow-models/coco-ssd": "^2.2.3",

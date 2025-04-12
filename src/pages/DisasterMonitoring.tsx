@@ -5,9 +5,10 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import AIRecommendations from '../components/AIRecommendations';
 import MachinePartsMonitor from '../components/MachinePartsMonitor';
 import PowerSupplyMonitor from '../components/PowerSupplyMonitor';
+import { Activity, AlertTriangle, Settings, Zap, Power, Wind, Cpu, Database, BarChart2, Layers } from 'lucide-react';
 
 // Tab options for the dashboard
-type TabOption = 'overview' | 'comparison' | 'equipment' | 'power' | 'recommendations';
+type TabOption = 'overview' | 'equipment' | 'power' | 'health' | 'ai';
 
 const DisasterMonitoring: React.FC = () => {
   const { sites, isLoading, runDisasterAnalysis } = useDataStore();
@@ -20,6 +21,17 @@ const DisasterMonitoring: React.FC = () => {
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [sustainabilityScore, setSustainabilityScore] = useState<number>(75);
   const updateTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth < 768);
+
+  // Check for mobile screen size
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Mock historical data for comparison
   const [historicalData, setHistoricalData] = useState(() => {
@@ -122,31 +134,7 @@ const DisasterMonitoring: React.FC = () => {
     setIsSimulating(true);
     await runDisasterAnalysis();
     setIsSimulating(false);
-    
-    // Auto-switch to comparison tab after disaster simulation
-    setActiveTab('comparison');
   };
-
-  // Generate comparison data for before/after disaster
-  const comparisonData = sites.map(site => {
-    const preDisaster = preDisasterData.find(d => d.id === site.id);
-    const currentData = site.energyData[site.energyData.length - 1];
-    
-    return {
-      id: site.id,
-      name: site.name,
-      beforeConsumption: preDisaster?.consumption || 0,
-      afterConsumption: currentData.consumption,
-      beforeEfficiency: preDisaster?.efficiency || 0,
-      afterEfficiency: currentData.efficiency,
-      consumptionChange: preDisaster ? 
-        ((currentData.consumption - preDisaster.consumption) / preDisaster.consumption * 100).toFixed(1) + '%' : 
-        'N/A',
-      efficiencyChange: preDisaster ? 
-        ((currentData.efficiency - preDisaster.efficiency) / preDisaster.efficiency * 100).toFixed(1) + '%' : 
-        'N/A'
-    };
-  });
 
   // Calculate total energy stats
   const totalConsumption = sites.reduce(
@@ -168,164 +156,160 @@ const DisasterMonitoring: React.FC = () => {
     );
   }
 
-  // Render different content based on active tab
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'comparison':
-        return (
-          <div className="space-y-6">
-            <div className="alert shadow-lg bg-info/10">
-              <div>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="stroke-info flex-shrink-0 w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <div>
-                  <h3 className="font-bold">Before vs. After Disaster Analysis</h3>
-                  <div className="text-xs">Compare energy consumption and efficiency changes</div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="overflow-x-auto">
-              <table className="table w-full">
-                <thead>
-                  <tr>
-                    <th>Site</th>
-                    <th>Before Consumption</th>
-                    <th>After Consumption</th>
-                    <th>Change</th>
-                    <th>Before Efficiency</th>
-                    <th>After Efficiency</th>
-                    <th>Change</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {comparisonData.map(data => (
-                    <tr key={data.id}>
-                      <td>{data.name}</td>
-                      <td>{data.beforeConsumption.toFixed(2)} kWh</td>
-                      <td>{data.afterConsumption.toFixed(2)} kWh</td>
-                      <td className={parseFloat(data.consumptionChange) > 0 ? 'text-error' : 'text-success'}>
-                        {data.consumptionChange}
-                      </td>
-                      <td>{data.beforeEfficiency.toFixed(1)}%</td>
-                      <td>{data.afterEfficiency.toFixed(1)}%</td>
-                      <td className={parseFloat(data.efficiencyChange) < 0 ? 'text-error' : 'text-success'}>
-                        {data.efficiencyChange}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            
-            <div className="mt-6">
-              <h4 className="font-bold mb-3">Consumption Impact Analysis</h4>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={comparisonData.slice(0, 6)}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar name="Before Disaster" dataKey="beforeConsumption" fill="#36D399" />
-                  <Bar name="After Disaster" dataKey="afterConsumption" fill="#F87272" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+  // Mobile view rendering
+  const renderMobileView = () => (
+    <div className="flex flex-col bg-gradient-to-br from-gray-900 via-blue-900 to-green-900 text-white min-h-screen">
+      {/* Header */}
+      <div className="p-4 pt-5 pb-3">
+        <div className="flex justify-between items-center">
+          <div className="flex-1">
+            <h1 className="text-xl font-bold">Disaster Energy Monitoring</h1>
+            <p className="text-xs opacity-80 mt-1">
+              Monitor energy consumption and equipment health after disasters to identify issues.
+            </p>
           </div>
-        );
-        
-      case 'equipment':
-        return <MachinePartsMonitor selectedSiteId={selectedSite} />;
-        
-      case 'power':
-        return <PowerSupplyMonitor selectedSiteId={selectedSite} />;
-        
-      case 'recommendations':
-        return <AIRecommendations sites={sortedSites} />;
-        
-      default: // 'overview'
-        return (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="stat bg-base-100 rounded-lg shadow-md">
-                <div className="stat-title">Total Energy Consumption</div>
-                <div className="stat-value text-primary">{totalConsumption}</div>
-                <div className="stat-desc">kWh across all sites</div>
-              </div>
-              
-              <div className="stat bg-base-100 rounded-lg shadow-md">
-                <div className="stat-title">Average Efficiency</div>
-                <div className="stat-value text-secondary">{avgEfficiency}%</div>
-                <div className="stat-desc">System wide</div>
-              </div>
-              
-              <div className="stat bg-base-100 rounded-lg shadow-md">
-                <div className="stat-title">Critical Sites</div>
-                <div className="stat-value text-error">
-                  {sortedSites.filter(site => site.healthStatus === 'Critical').length}
-                </div>
-                <div className="stat-desc">Require immediate repair</div>
-              </div>
-              
-              <div className="stat bg-base-100 rounded-lg shadow-md">
-                <div className="stat-title">Sustainability Score</div>
-                <div className="stat-value text-accent">{sustainabilityScore.toFixed(1)}</div>
-                <div className="stat-desc">
-                  <progress 
-                    className={`progress ${sustainabilityScore > 80 ? 'progress-success' : 
-                                         sustainabilityScore > 60 ? 'progress-accent' : 
-                                         sustainabilityScore > 40 ? 'progress-warning' : 'progress-error'}`} 
-                    value={sustainabilityScore} 
-                    max="100"
-                  ></progress>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-base-100 p-4 rounded-lg shadow-md">
-              <h3 className="text-lg font-bold mb-2">Real-time Energy Consumption</h3>
-              <p className="text-sm text-base-content/70 mb-3">
-                Last updated: {lastUpdated.toLocaleTimeString()}
-              </p>
-              <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={historicalData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="time" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Area type="monotone" dataKey="consumption" stroke="#F87272" fill="#F87272" fillOpacity={0.2} />
-                  <Area type="monotone" dataKey="grid" stroke="#3ABFF8" fill="#3ABFF8" fillOpacity={0.2} />
-                  <Area type="monotone" dataKey="renewable" stroke="#36D399" fill="#36D399" fillOpacity={0.2} />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-            
-            <div className="bg-base-100 p-4 rounded-lg shadow-md">
-              <h3 className="text-lg font-bold mb-2">System Efficiency Trend</h3>
-              <ResponsiveContainer width="100%" height={250}>
-                <LineChart data={historicalData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="time" />
-                  <YAxis domain={[0, 100]} />
-                  <Tooltip />
-                  <Legend />
-                  <Line 
-                    type="monotone" 
-                    dataKey="efficiency" 
-                    stroke="#FBBD23" 
-                    activeDot={{ r: 8 }} 
-                    strokeWidth={2}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        );
-    }
-  };
+          <Settings className="h-5 w-5 text-white/80" />
+        </div>
 
-  return (
+        <button 
+          className={`btn btn-sm btn-error w-full mt-3 ${isSimulating ? 'loading' : ''}`}
+          onClick={handleSimulateDisaster}
+          disabled={isSimulating}
+        >
+          {isSimulating ? 'Simulating...' : 'Simulate Disaster Impact'}
+        </button>
+
+        <div className="text-xs opacity-70 mt-2 text-right">
+          Last updated: {lastUpdated.toLocaleTimeString()}
+        </div>
+      </div>
+
+      {/* Sites List */}
+      <div className="px-4 py-2">
+        <h2 className="text-sm font-semibold mb-2">Sites</h2>
+        <div className="space-y-2">
+          {sortedSites.slice(0, 3).map(site => (
+            <div 
+              key={site.id}
+              className={`p-2 rounded-md cursor-pointer bg-white/10 border-l-4 ${
+                site.healthStatus === 'Critical' ? 'border-error' : 
+                site.healthStatus === 'Warning' ? 'border-warning' : 'border-success'
+              }`}
+              onClick={() => setSelectedSite(site.id === selectedSite ? null : site.id)}
+            >
+              <div className="flex justify-between items-center">
+                <h4 className="text-sm font-medium">{site.name}</h4>
+                <span className={`text-xs ${site.statusColor}`}>{site.healthStatus}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs mt-1 opacity-80">
+                <span>{site.location.address}</span>
+                <span>Efficiency: {site.energyData[site.energyData.length - 1].efficiency.toFixed(1)}%</span>
+              </div>
+              <div className="mt-1 h-1 w-full bg-white/20 rounded-full overflow-hidden">
+                <div 
+                  className={`h-full ${
+                    site.healthStatus === 'Critical' ? 'bg-error' : 
+                    site.healthStatus === 'Warning' ? 'bg-warning' : 'bg-success'
+                  }`}
+                  style={{width: `${Math.min(100, site.energyData[site.energyData.length - 1].efficiency)}%`}}
+                ></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Channel History */}
+      <div className="px-4 py-2">
+        <h2 className="text-sm font-semibold mb-1">Channel History</h2>
+        <div className="bg-white/10 p-2 rounded-md">
+          <div className="text-xs opacity-80 mb-1">System-wide Energy Matrix</div>
+          <div className="flex space-x-1">
+            <div className="text-xs opacity-80">Efficiency:</div>
+            <div className="font-medium text-xs">{avgEfficiency}%</div>
+            <div className="text-xs opacity-80 ml-3">Type:</div>
+            <div className="font-medium text-xs">Power Tower Substation</div>
+          </div>
+          <div className="mt-1 h-1.5 w-full bg-white/20 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-success"
+              style={{width: `${avgEfficiency}%`}}
+            ></div>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex justify-between px-3 py-2 mt-2 border-t border-white/10">
+        <button 
+          className={`flex flex-col items-center px-2 py-1 ${activeTab === 'overview' ? 'text-green-300' : 'text-white/70'}`}
+          onClick={() => setActiveTab('overview')}
+        >
+          <Activity className="h-4 w-4" />
+          <span className="text-xs mt-1">Overview</span>
+        </button>
+        <button 
+          className={`flex flex-col items-center px-2 py-1 ${activeTab === 'equipment' ? 'text-green-300' : 'text-white/70'}`}
+          onClick={() => setActiveTab('equipment')}
+        >
+          <Cpu className="h-4 w-4" />
+          <span className="text-xs mt-1">Equipment</span>
+        </button>
+        <button 
+          className={`flex flex-col items-center px-2 py-1 ${activeTab === 'power' ? 'text-green-300' : 'text-white/70'}`}
+          onClick={() => setActiveTab('power')}
+        >
+          <Power className="h-4 w-4" />
+          <span className="text-xs mt-1">Power</span>
+        </button>
+        <button 
+          className={`flex flex-col items-center px-2 py-1 ${activeTab === 'health' ? 'text-green-300' : 'text-white/70'}`}
+          onClick={() => setActiveTab('health')}
+        >
+          <Database className="h-4 w-4" />
+          <span className="text-xs mt-1">Health</span>
+        </button>
+        <button 
+          className={`flex flex-col items-center px-2 py-1 ${activeTab === 'ai' ? 'text-green-300' : 'text-white/70'}`}
+          onClick={() => setActiveTab('ai')}
+        >
+          <Zap className="h-4 w-4" />
+          <span className="text-xs mt-1">AI</span>
+        </button>
+      </div>
+
+      {/* Statistics */}
+      <div className="px-4 py-3">
+        <h2 className="text-sm font-semibold mb-2">Total Energy Consumption</h2>
+        <div className="text-2xl font-bold text-green-400">
+          {totalConsumption}
+          <span className="text-sm opacity-80 ml-1">kWh across all sites</span>
+        </div>
+
+        <h2 className="text-sm font-semibold mt-4 mb-2">Average Efficiency</h2>
+        <div className="text-2xl font-bold text-cyan-400">
+          {avgEfficiency}%
+          <span className="text-sm opacity-80 ml-1">System wide</span>
+        </div>
+
+        <h2 className="text-sm font-semibold mt-4 mb-2">Critical Sites</h2>
+        <div className="text-2xl font-bold text-red-400">
+          {sortedSites.filter(site => site.healthStatus === 'Critical').length}
+          <span className="text-sm opacity-80 ml-1">Require immediate repair</span>
+        </div>
+      </div>
+
+      {/* Floating Action Button */}
+      <div className="fixed bottom-4 right-4 z-10">
+        <button className="btn btn-circle btn-primary shadow-lg">
+          <AlertTriangle className="h-5 w-5" />
+        </button>
+      </div>
+    </div>
+  );
+
+  // Desktop view rendering
+  return isMobile ? renderMobileView() : (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col gap-6">
         {/* Header Section */}
@@ -408,12 +392,6 @@ const DisasterMonitoring: React.FC = () => {
                 Overview
               </a>
               <a 
-                className={`tab ${activeTab === 'comparison' ? 'tab-active' : ''}`}
-                onClick={() => setActiveTab('comparison')}
-              >
-                Before/After
-              </a>
-              <a 
                 className={`tab ${activeTab === 'equipment' ? 'tab-active' : ''}`}
                 onClick={() => setActiveTab('equipment')}
               >
@@ -426,27 +404,115 @@ const DisasterMonitoring: React.FC = () => {
                 Power Supply
               </a>
               <a 
-                className={`tab ${activeTab === 'recommendations' ? 'tab-active' : ''}`}
-                onClick={() => setActiveTab('recommendations')}
+                className={`tab ${activeTab === 'health' ? 'tab-active' : ''}`}
+                onClick={() => setActiveTab('health')}
+              >
+                System Health
+              </a>
+              <a 
+                className={`tab ${activeTab === 'ai' ? 'tab-active' : ''}`}
+                onClick={() => setActiveTab('ai')}
               >
                 AI Recommendations
               </a>
             </div>
             
-            {/* Conditional Tab Content */}
-            {renderTabContent()}
-
-            {/* Heat Map (Only show in overview tab) */}
-            {activeTab === 'overview' && centerCoordinates && (
-              <div className="mt-6">
-                <HeatMap 
-                  centerLat={centerCoordinates.lat}
-                  centerLng={centerCoordinates.lng}
-                  zoom={zoom}
-                  showDisasterMode={true}
-                />
+            {/* Stats Section */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <div className="stat bg-base-100 rounded-lg shadow-md">
+                <div className="stat-title">Total Energy Consumption</div>
+                <div className="stat-value text-primary">{totalConsumption}</div>
+                <div className="stat-desc">kWh across all sites</div>
               </div>
+              
+              <div className="stat bg-base-100 rounded-lg shadow-md">
+                <div className="stat-title">Average Efficiency</div>
+                <div className="stat-value text-secondary">{avgEfficiency}%</div>
+                <div className="stat-desc">System wide</div>
+              </div>
+              
+              <div className="stat bg-base-100 rounded-lg shadow-md">
+                <div className="stat-title">Critical Sites</div>
+                <div className="stat-value text-error">
+                  {sortedSites.filter(site => site.healthStatus === 'Critical').length}
+                </div>
+                <div className="stat-desc">Require immediate repair</div>
+              </div>
+              
+              <div className="stat bg-base-100 rounded-lg shadow-md">
+                <div className="stat-title">Sustainability Score</div>
+                <div className="stat-value text-accent">{sustainabilityScore.toFixed(1)}</div>
+                <div className="stat-desc">
+                  <progress 
+                    className={`progress ${sustainabilityScore > 80 ? 'progress-success' : 
+                                         sustainabilityScore > 60 ? 'progress-accent' : 
+                                         sustainabilityScore > 40 ? 'progress-warning' : 'progress-error'}`} 
+                    value={sustainabilityScore} 
+                    max="100"
+                  ></progress>
+                </div>
+              </div>
+            </div>
+            
+            {/* Content based on active tab */}
+            {activeTab === 'overview' && (
+              <>
+                <div className="bg-base-100 p-4 rounded-lg shadow-md">
+                  <h3 className="text-lg font-bold mb-2">Real-time Energy Consumption</h3>
+                  <p className="text-sm text-base-content/70 mb-3">
+                    Last updated: {lastUpdated.toLocaleTimeString()}
+                  </p>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <AreaChart data={historicalData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="time" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Area type="monotone" dataKey="consumption" stroke="#F87272" fill="#F87272" fillOpacity={0.2} />
+                      <Area type="monotone" dataKey="grid" stroke="#3ABFF8" fill="#3ABFF8" fillOpacity={0.2} />
+                      <Area type="monotone" dataKey="renewable" stroke="#36D399" fill="#36D399" fillOpacity={0.2} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+                
+                <div className="bg-base-100 p-4 rounded-lg shadow-md mt-6">
+                  <h3 className="text-lg font-bold mb-2">System Efficiency Trend</h3>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <LineChart data={historicalData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="time" />
+                      <YAxis domain={[0, 100]} />
+                      <Tooltip />
+                      <Legend />
+                      <Line 
+                        type="monotone" 
+                        dataKey="efficiency" 
+                        stroke="#FBBD23" 
+                        activeDot={{ r: 8 }} 
+                        strokeWidth={2}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+                
+                {/* Heat Map */}
+                {centerCoordinates && (
+                  <div className="mt-6">
+                    <HeatMap 
+                      centerLat={centerCoordinates.lat}
+                      centerLng={centerCoordinates.lng}
+                      zoom={zoom}
+                      showDisasterMode={true}
+                    />
+                  </div>
+                )}
+              </>
             )}
+            
+            {activeTab === 'equipment' && <MachinePartsMonitor selectedSiteId={selectedSite} />}
+            {activeTab === 'power' && <PowerSupplyMonitor selectedSiteId={selectedSite} />}
+            {activeTab === 'ai' && <AIRecommendations sites={sortedSites} />}
           </div>
         </div>
       </div>
