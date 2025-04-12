@@ -958,8 +958,8 @@ const RenewableEnergy = () => {
                       <div className="flex flex-col items-center bg-base-200/60 rounded-full w-20 h-20 justify-center shadow-inner" style={{
                         backdropFilter: 'blur(3px)',
                         position: 'absolute',
-                        top: '30%',
-                        left: '36%',
+                        top: '43%',
+                        left: '50%',
                         transform: 'translate(-50%, -50%)'
                       }}>
                         <Zap className="w-6 h-6 text-primary mb-1" />

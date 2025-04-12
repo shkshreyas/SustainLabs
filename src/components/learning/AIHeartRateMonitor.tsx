@@ -1209,16 +1209,16 @@ const AIHeartRateMonitor: React.FC = () => {
     setLastSpokenMessage(message);
   };
 
-  // Enhanced camera initialization with auto flash control
+  // Modify the camera initialization to use the back camera and control flash
   const initializeCamera = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // Request camera access - use user-facing camera for heart rate monitoring
+      // Request camera access - use back camera for heart rate monitoring
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { 
-          facingMode: 'user', // Use front camera for easier self-monitoring
+          facingMode: 'environment', // Use back camera instead of front camera
           width: { ideal: 1280 },
           height: { ideal: 720 } 
         }
@@ -1232,13 +1232,13 @@ const AIHeartRateMonitor: React.FC = () => {
         await videoRef.current.play();
       }
       
-      // Try to enable flash if available
+      // Try to enable and control flash if available
       try {
         const track = stream.getVideoTracks()[0];
         const capabilities = track.getCapabilities();
         
         if (capabilities && 'torch' in capabilities) {
-          // Enable flash and set to medium intensity first
+          // Enable flash immediately
           await track.applyConstraints({
             advanced: [{ torch: true } as any]
           });
@@ -1246,12 +1246,16 @@ const AIHeartRateMonitor: React.FC = () => {
           
           // Setup flash pulsing for better blood flow detection
           startFlashPulsing(track);
+          
+          // Voice feedback about flash
+          speakInstruction("Flash enabled. Please place your finger directly over the camera lens and flash.");
         } else {
           // If flash not available, give instructions to user
           speakInstruction("Flash is not available on your device. Please ensure good lighting and place your finger firmly on the camera.");
         }
       } catch (e) {
         console.log('Flash not supported');
+        speakInstruction("Flash control is not available. Please ensure your finger covers both the camera lens and flash for best results.");
       }
       
       // Move to next step
@@ -1260,7 +1264,7 @@ const AIHeartRateMonitor: React.FC = () => {
       setIsStarted(true);
       
       // Voice guidance
-      speakInstruction("Place your finger gently but firmly on the camera lens. Try not to move during measurement.");
+      speakInstruction("Place your finger gently but firmly over the camera lens and flash. Try not to move during measurement.");
       
       return true;
     } catch (err) {
@@ -1272,35 +1276,112 @@ const AIHeartRateMonitor: React.FC = () => {
     }
   };
 
-  // Function to pulse the flash at different intensities for better blood flow detection
+  // Enhance the flash pulsing function to create a more effective pattern for heart rate detection
   const startFlashPulsing = (track: MediaStreamTrack) => {
-    // Stop any existing interval
+    // Clear any existing interval
     if (signalIntervalRef.current) {
       clearInterval(signalIntervalRef.current);
     }
     
-    // Start pulsing the flash at different intensities
+    let flashPattern = [
+      { on: true, duration: 150 },   // On for 150ms
+      { on: false, duration: 100 },  // Off for 100ms
+      { on: true, duration: 150 },   // On for 150ms
+      { on: false, duration: 300 }   // Off for 300ms
+    ];
+    
+    let patternIndex = 0;
+    let lastToggleTime = Date.now();
+    
+    // Start pulsing the flash in a pattern designed to enhance blood flow visibility
     signalIntervalRef.current = setInterval(async () => {
+      if (isMeasuring) {
+        const currentTime = Date.now();
+        const currentPattern = flashPattern[patternIndex];
+        
+        // Check if it's time to change flash state according to our pattern
+        if (currentTime - lastToggleTime >= currentPattern.duration) {
+          try {
+            // Toggle flash based on pattern
+            await track.applyConstraints({
+              advanced: [{ torch: currentPattern.on } as any]
+            });
+            
+            // Move to next step in pattern
+            patternIndex = (patternIndex + 1) % flashPattern.length;
+            lastToggleTime = currentTime;
+          } catch (e) {
+            console.error('Error controlling flash:', e);
+          }
+        }
+      }
+    }, 50); // Check frequently for smooth timing
+  };
+
+  // Also add a function to check and switch camera if needed
+  const switchCamera = async () => {
+    if (cameraStream) {
+      // Stop current stream
+      cameraStream.getTracks().forEach(track => track.stop());
+      
       try {
-        // Use torch constraints with different intensities if supported
-        // Note: Many devices only support on/off, but this code will work with devices that support intensity levels
-        if (isMeasuring) {
-          // Toggle flash on/off to create a pulsing effect
+        // Try to get the back camera specifically
+        const newStream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { exact: 'environment' }, // Force back camera
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
+        });
+        
+        setCameraStream(newStream);
+        
+        if (videoRef.current) {
+          videoRef.current.srcObject = newStream;
+          await videoRef.current.play();
+        }
+        
+        // Try to enable flash on the new camera
+        const track = newStream.getVideoTracks()[0];
+        const capabilities = track.getCapabilities();
+        
+        if (capabilities && 'torch' in capabilities) {
           await track.applyConstraints({
             advanced: [{ torch: true } as any]
           });
-          
-          // Small delay before turning off
-          setTimeout(async () => {
-            await track.applyConstraints({
-              advanced: [{ torch: false } as any]
-            });
-          }, 100);
+          setFlashEnabled(true);
+          startFlashPulsing(track);
+          speakInstruction("Back camera activated with flash. Ready for heart rate measurement.");
         }
-      } catch (e) {
-        console.error('Error controlling flash:', e);
+        
+        return true;
+      } catch (err) {
+        console.error("Error switching to back camera:", err);
+        speakInstruction("Could not switch to back camera. Using available camera instead.");
+        
+        // Fallback to any available camera
+        try {
+          const fallbackStream = await navigator.mediaDevices.getUserMedia({
+            video: true
+          });
+          
+          setCameraStream(fallbackStream);
+          
+          if (videoRef.current) {
+            videoRef.current.srcObject = fallbackStream;
+            await videoRef.current.play();
+          }
+          
+          return true;
+        } catch (fallbackErr) {
+          console.error("Camera access failed:", fallbackErr);
+          setError("Could not access any camera. Please check permissions.");
+          speakInstruction("Camera access failed. Please check your camera permissions and try again.");
+          return false;
+        }
       }
-    }, 500); // Adjust timing for optimal measurement
+    }
+    return false;
   };
 
   // Modified startMeasurement function to ensure we don't show errors but show results
@@ -1923,19 +2004,38 @@ const AIHeartRateMonitor: React.FC = () => {
                       }
                       setIsStarted(false);
                       setStep(1);
+                      setIsHumanDetected(false);
                     }}
                     className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm"
                   >
                     Reset
                   </button>
                   
-                  <button
-                    onClick={startMeasurement}
-                    className="px-3 py-1.5 bg-red-600 hover:bg-red-700 rounded-lg text-sm flex items-center"
-                  >
-                    <Heart size={14} className="mr-1" />
-                    Measure Again
-                  </button>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={switchCamera}
+                      className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm flex items-center"
+                    >
+                      <RefreshCw size={14} className="mr-1" />
+                      Switch Camera
+                    </button>
+                    
+                    <button
+                      onClick={toggleFlash}
+                      className={`px-3 py-1.5 ${flashEnabled ? 'bg-yellow-600' : 'bg-gray-700 hover:bg-gray-600'} rounded-lg text-sm flex items-center`}
+                    >
+                      <Zap size={14} className="mr-1" />
+                      {flashEnabled ? 'Flash On' : 'Flash Off'}
+                    </button>
+                    
+                    <button
+                      onClick={startMeasurement}
+                      className="px-3 py-1.5 bg-red-600 hover:bg-red-700 rounded-lg text-sm flex items-center"
+                    >
+                      <Heart size={14} className="mr-1" />
+                      Measure
+                    </button>
+                  </div>
                 </div>
               )}
               
