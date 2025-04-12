@@ -6,6 +6,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import { useAuthStore } from './store/authStore';
 import { useAppStore } from './store/appStore';
 import { useDataStore } from './store/dataStore';
+import MaintenanceDashboard from './components/MaintenanceDashboard';
 
 // Lazy load pages for better initial load performance
 const LandingPage = lazy(() => import('./pages/LandingPage'));
@@ -122,6 +123,7 @@ const AppContent = () => {
                 <Maintenance />
               </ProtectedRoute>
             } />
+            <Route path="/maintenance-mobile" element={<ProtectedRoute><MaintenanceDashboard /></ProtectedRoute>} />
 
             {/* Special routes */}
             <Route path="/unauthorized" element={<UnauthorizedPage />} />
