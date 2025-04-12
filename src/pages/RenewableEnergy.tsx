@@ -2,7 +2,24 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AreaChart, BarChart } from '@tremor/react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Sun, Wind, Battery, Zap, AlertTriangle, CloudRain, Thermometer, Download, TrendingUp, Calendar, DollarSign, IndianRupee } from 'lucide-react';
+import { 
+  Sun, 
+  Wind, 
+  Battery, 
+  Zap, 
+  AlertTriangle, 
+  CloudRain, 
+  Thermometer, 
+  Download, 
+  TrendingUp, 
+  Calendar, 
+  DollarSign, 
+  IndianRupee,
+  BarChart as BarChartIcon,
+  Droplets,
+  BarChart2,
+  ArrowUpRight
+} from 'lucide-react';
 import { faker } from '@faker-js/faker';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -14,7 +31,9 @@ const generateEnergyData = () => {
     wind: faker.number.int({ min: 15, max: 80 }),
     battery: faker.number.int({ min: 10, max: 60 }),
     consumption: faker.number.int({ min: 30, max: 90 }),
-    cost: faker.number.int({ min: 50, max: 200 })
+    cost: faker.number.int({ min: 50, max: 200 }),
+    optimizedUsage: faker.number.int({ min: 20, max: 70 }),
+    predictedUsage: faker.number.int({ min: 35, max: 95 })
   }));
 };
 
@@ -25,50 +44,22 @@ const weatherData = {
   forecast: 'Partly Cloudy'
 };
 
-const aiRecommendations = [
-  {
-    title: 'Dynamic Load Balancing Optimization',
-    description: 'Implement ML-powered load balancing system to distribute energy based on predicted demand patterns',
-    impact: 'Estimated 18% increase in grid efficiency',
-    priority: 'High',
-    roi: '3.5 months',
-    analysis: 'Based on historical data patterns and weather forecasts, implementing dynamic load balancing could significantly reduce energy waste during peak hours.',
-    steps: [
-      'Deploy IoT sensors across the grid',
-      'Install ML-based prediction system',
-      'Configure automated load distribution',
-      'Monitor and optimize thresholds'
-    ]
-  },
-  {
-    title: 'Predictive Maintenance Protocol',
-    description: 'Deploy AI-driven maintenance scheduling using vibration analysis and thermal imaging',
-    impact: 'Reduce downtime by 45%, extend equipment life by 25%',
-    priority: 'High',
-    roi: '5 months',
-    analysis: 'Current reactive maintenance patterns show significant efficiency losses. Predictive maintenance could prevent 85% of potential failures.',
-    steps: [
-      'Install vibration sensors',
-      'Deploy thermal cameras',
-      'Implement AI analysis system',
-      'Train maintenance team'
-    ]
-  },
-  {
-    title: 'Weather-Adaptive Solar Tracking',
-    description: 'Enhanced solar tracking algorithm incorporating real-time weather data and sun position',
-    impact: 'Potential 22% increase in solar collection efficiency',
-    priority: 'Medium',
-    roi: '4 months',
-    analysis: 'Current fixed tracking patterns miss optimal angles during varying weather conditions. Advanced tracking could capture significantly more energy.',
-    steps: [
-      'Update tracking software',
-      'Install weather sensors',
-      'Calibrate tracking algorithms',
-      'Monitor performance metrics'
-    ]
-  }
-];
+// Add this type definition for recommendations
+interface AIRecommendation {
+  id: string;
+  title: string;
+  description: string;
+  impact: {
+    energyProduction: number;
+    costSavings: number;
+    co2Reduction: number;
+  };
+  priority: 'High' | 'Medium' | 'Low';
+  category: 'Optimization' | 'Maintenance' | 'Expansion' | 'Efficiency';
+  implementationTimeframe: 'Immediate' | 'Short-term' | 'Long-term';
+  roi: number; // Return on investment (months)
+  confidenceScore: number; // AI confidence in recommendation (0-100)
+}
 
 const systemAlerts = [
   {
@@ -96,6 +87,16 @@ const systemAlerts = [
     action: 'Scheduled for inspection within 24 hours'
   }
 ];
+
+// Add interface for EnergySource
+interface EnergySource {
+  title: string;
+  value: string;
+  efficiency: string;
+  status: string;
+  icon: React.ElementType;
+  color: string;
+}
 
 const RenewableEnergy = () => {
   const [energyData, setEnergyData] = useState(generateEnergyData());
@@ -309,10 +310,13 @@ const RenewableEnergy = () => {
     return () => clearTimeout(timer);
   }, [energyData]); // Re-apply when data changes
 
+  // Fix the PDF generation by properly accessing recommendations
   const generateReport = async () => {
     setLoading(true);
     try {
       const doc = new jsPDF();
+      // Cast the jsPDF instance to 'any' to allow access to autoTable and lastAutoTable
+      const docAny = doc as any;
       
       // Header
       doc.setFontSize(20);
@@ -329,7 +333,7 @@ const RenewableEnergy = () => {
         ['Carbon Offset', '2.4 tons'],
         ['Cost Savings', '₹342.50/day']
       ];
-      doc.autoTable({
+      docAny.autoTable({
         startY: 50,
         head: [['Metric', 'Value']],
         body: metrics
@@ -337,42 +341,63 @@ const RenewableEnergy = () => {
 
       // Energy Sources
       doc.setFontSize(16);
-      doc.text('Energy Sources', 20, doc.lastAutoTable.finalY + 20);
+      doc.text('Energy Sources', 20, docAny.lastAutoTable.finalY + 20);
       const sources = [
         ['Solar Power', '45.2 kW', '87%'],
         ['Wind Power', '32.8 kW', '78%'],
         ['Battery Storage', '120 kWh', '92%']
       ];
-      doc.autoTable({
-        startY: doc.lastAutoTable.finalY + 25,
+      docAny.autoTable({
+        startY: docAny.lastAutoTable.finalY + 25,
         head: [['Source', 'Output', 'Efficiency']],
         body: sources
       });
 
       // AI Recommendations
       doc.setFontSize(16);
-      doc.text('AI Recommendations', 20, doc.lastAutoTable.finalY + 20);
-      const recommendations = aiRecommendations.map(rec => [
+      doc.text('AI Recommendations', 20, docAny.lastAutoTable.finalY + 20);
+      
+      // Create a mock set of recommendations if needed
+      const reportRecommendations = [
+        {
+          title: 'Dynamic Load Balancing Optimization',
+          impact: { energyProduction: 15, costSavings: 22 },
+          roi: 6
+        },
+        {
+          title: 'Predictive Maintenance Protocol',
+          impact: { energyProduction: 8, costSavings: 35 },
+          roi: 3
+        },
+        {
+          title: 'Weather-Adaptive Solar Tracking',
+          impact: { energyProduction: 12, costSavings: 10 },
+          roi: 9
+        }
+      ];
+      
+      const recommendationsForReport = reportRecommendations.map(rec => [
         rec.title,
-        rec.impact,
-        rec.roi
+        `${rec.impact.energyProduction}% energy, ${rec.impact.costSavings}% cost`,
+        `${rec.roi} months`
       ]);
-      doc.autoTable({
-        startY: doc.lastAutoTable.finalY + 25,
+      
+      docAny.autoTable({
+        startY: docAny.lastAutoTable.finalY + 25,
         head: [['Recommendation', 'Impact', 'ROI']],
-        body: recommendations
+        body: recommendationsForReport
       });
 
       // System Alerts
       doc.setFontSize(16);
-      doc.text('Active System Alerts', 20, doc.lastAutoTable.finalY + 20);
+      doc.text('Active System Alerts', 20, docAny.lastAutoTable.finalY + 20);
       const alerts = systemAlerts.map(alert => [
         alert.title,
         alert.description,
         alert.impact
       ]);
-      doc.autoTable({
-        startY: doc.lastAutoTable.finalY + 25,
+      docAny.autoTable({
+        startY: docAny.lastAutoTable.finalY + 25,
         head: [['Alert', 'Description', 'Impact']],
         body: alerts
       });
@@ -434,7 +459,7 @@ const RenewableEnergy = () => {
     </div>
   );
 
-  const EnergySourceCard = ({ source }) => (
+  const EnergySourceCard = ({ source }: { source: EnergySource }) => (
     <motion.div
       whileHover={{ scale: 1.02 }}
       className="card bg-base-200 shadow-xl"
@@ -471,56 +496,420 @@ const RenewableEnergy = () => {
     </motion.div>
   );
 
-  const RecommendationsCard = () => (
-    <div className="card bg-base-200 shadow-xl">
-      <div className="card-body">
-        <div className="flex justify-between items-center">
-          <h2 className="card-title">AI-Driven Recommendations</h2>
-          <Zap className="w-6 h-6 text-warning" />
-        </div>
-        <div className="space-y-4 mt-4">
-          {aiRecommendations.map((recommendation, index) => (
-            <motion.div
-              key={index}
-              className="collapse collapse-plus bg-base-300"
-              whileHover={{ scale: 1.01 }}
+  // Fix the AIRecommendationsPanel component to maintain state properly
+  const AIRecommendationsPanel = () => {
+    const [recommendations, setRecommendations] = useState<AIRecommendation[]>([
+      {
+        id: 'rec1',
+        title: 'Dynamic Load Balancing Optimization',
+        description: 'Implement AI-driven load balancing to optimize energy distribution based on real-time usage patterns. This would reduce peak loads by an estimated 24% and increase overall system efficiency.',
+        impact: {
+          energyProduction: 15,
+          costSavings: 22,
+          co2Reduction: 18
+        },
+        priority: 'High',
+        category: 'Optimization',
+        implementationTimeframe: 'Short-term',
+        roi: 6,
+        confidenceScore: 92
+      },
+      {
+        id: 'rec2',
+        title: 'Predictive Maintenance Protocol',
+        description: 'Deploy machine learning models to predict equipment failures before they occur. Analysis of vibration and temperature patterns indicates potential issues with 3 inverters in your east array.',
+        impact: {
+          energyProduction: 8,
+          costSavings: 35,
+          co2Reduction: 5
+        },
+        priority: 'High',
+        category: 'Maintenance',
+        implementationTimeframe: 'Immediate',
+        roi: 3,
+        confidenceScore: 89
+      },
+      {
+        id: 'rec3',
+        title: 'Weather-Adaptive Solar Tracking',
+        description: 'Enhance solar panel tracking algorithms with hyperlocal weather forecasting to optimize angle adjustments 7-10 minutes before cloud cover changes.',
+        impact: {
+          energyProduction: 12,
+          costSavings: 10,
+          co2Reduction: 11
+        },
+        priority: 'Medium',
+        category: 'Optimization',
+        implementationTimeframe: 'Short-term',
+        roi: 9,
+        confidenceScore: 81
+      },
+      {
+        id: 'rec4',
+        title: 'Energy Storage Capacity Expansion',
+        description: 'Current battery usage patterns indicate optimal expansion of 15kWh to capture excess production during peak solar hours. Machine learning projections show ROI within 14 months.',
+        impact: {
+          energyProduction: 0,
+          costSavings: 28,
+          co2Reduction: 25
+        },
+        priority: 'Medium',
+        category: 'Expansion',
+        implementationTimeframe: 'Long-term',
+        roi: 14,
+        confidenceScore: 85
+      },
+      {
+        id: 'rec5',
+        title: 'Smart Inverter Configuration Updates',
+        description: 'Configuration adjustments to inverter settings based on seasonal performance analysis would improve conversion efficiency during early morning and evening hours.',
+        impact: {
+          energyProduction: 6,
+          costSavings: 8,
+          co2Reduction: 6
+        },
+        priority: 'Low',
+        category: 'Efficiency',
+        implementationTimeframe: 'Immediate',
+        roi: 1,
+        confidenceScore: 94
+      }
+    ]);
+    
+    const [selectedRecommendation, setSelectedRecommendation] = useState<AIRecommendation | null>(null);
+    const [filterPriority, setFilterPriority] = useState<string | null>(null);
+    const [showAllRecommendations, setShowAllRecommendations] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [implementing, setImplementing] = useState<string | null>(null);
+    const [implementationStatus, setImplementationStatus] = useState<{[key: string]: string}>({});
+
+    // Filter recommendations based on selected priority
+    const filteredRecommendations = filterPriority 
+      ? recommendations.filter(rec => rec.priority === filterPriority)
+      : recommendations;
+    
+    // Display recommendations based on showAll state
+    const displayedRecommendations = showAllRecommendations 
+      ? filteredRecommendations 
+      : filteredRecommendations.slice(0, 3);
+
+    // Function to generate new recommendations - Fixed to ensure state persistence
+    const generateNewRecommendations = () => {
+      setIsGenerating(true);
+      
+      // Simulate API call delay
+      setTimeout(() => {
+        try {
+          const newRecommendations: AIRecommendation[] = [
+            {
+              id: 'rec-' + Date.now() + '-1',
+              title: 'Microgrid Integration Strategy',
+              description: 'Our analysis of your current system architecture shows significant potential for microgrid implementation. By establishing a semi-autonomous local power grid, you can achieve greater resilience during outages and optimize energy flow between your solar, wind, and battery systems.\n\nOur AI models indicate that your current production patterns and consumption needs are ideal for a Type B microgrid configuration with fault-tolerant switching mechanisms. Implementation would involve installation of advanced controller hardware and reconfiguration of existing distribution panels.\n\nThis upgrade would not only improve overall system efficiency but also provide critical backup capabilities during grid instability.',
+              impact: {
+                energyProduction: 8,
+                costSavings: 32,
+                co2Reduction: 12
+              },
+              priority: 'High',
+              category: 'Optimization',
+              implementationTimeframe: 'Short-term',
+              roi: 8,
+              confidenceScore: 94
+            },
+            {
+              id: 'rec-' + Date.now() + '-2',
+              title: 'AI-Driven Demand Response System',
+              description: 'Based on 12 months of collected usage data, we\'ve identified clear patterns in your energy consumption that can be optimized with an intelligent demand response system. This system would use machine learning to predict peak demand periods and automatically adjust non-critical loads to reduce strain on your renewable resources.\n\nThe system would monitor grid conditions, weather forecasts, and historical usage patterns to make real-time decisions about load shedding and energy distribution. Key components include smart relays for major appliances, integration with existing HVAC controls, and a predictive algorithm that improves over time.\n\nEarly implementation would provide a solid foundation for future smart home/building capabilities while immediately reducing energy waste and extending battery life.',
+              impact: {
+                energyProduction: 4,
+                costSavings: 28,
+                co2Reduction: 22
+              },
+              priority: 'Medium',
+              category: 'Efficiency',
+              implementationTimeframe: 'Immediate',
+              roi: 4,
+              confidenceScore: 91
+            },
+            {
+              id: 'rec-' + Date.now() + '-3',
+              title: 'Solar Panel Cleaning & Efficiency Protocol',
+              description: 'Analysis of your solar production data indicates a gradual 8% decline in output efficiency over the past 3 months, which doesn\'t correlate with seasonal changes. Our diagnostic algorithms suggest dust and particulate accumulation as the most likely cause, with a 87% confidence level.\n\nWe recommend implementing a quarterly cleaning protocol using deionized water and soft-bristle methods. Additionally, infrared scanning should be performed to identify any hotspots that may indicate damaged cells or connection issues. The northwestern array shows particular signs of reduced performance and should be prioritized.\n\nRegular maintenance will prevent further degradation and restore optimal production levels, with typical efficiency gains of 5-12% following proper cleaning procedures.',
+              impact: {
+                energyProduction: 12,
+                costSavings: 14,
+                co2Reduction: 10
+              },
+              priority: 'High',
+              category: 'Maintenance',
+              implementationTimeframe: 'Immediate',
+              roi: 1,
+              confidenceScore: 96
+            },
+            {
+              id: 'rec-' + Date.now() + '-4',
+              title: 'Wind Turbine Vibration Mitigation',
+              description: 'Frequency analysis of your wind turbine telemetry data reveals abnormal vibration patterns during specific wind speed ranges (18-24 km/h). These vibrations indicate potential blade imbalance or early-stage bearing wear that could significantly reduce component lifespan if left unaddressed.\n\nOur recommendation includes a comprehensive dynamic balancing procedure using piezoelectric accelerometers to identify precise imbalance locations, followed by corrective weight adjustments on the affected blades. Additionally, the main bearing assembly should be inspected for early signs of wear and lubricated with high-grade synthetic grease rated for your specific environmental conditions.\n\nAddressing these issues now will prevent catastrophic failures, extend equipment lifespan, and maintain optimal energy production efficiency.',
+              impact: {
+                energyProduction: 6,
+                costSavings: 42,
+                co2Reduction: 4
+              },
+              priority: 'High',
+              category: 'Maintenance',
+              implementationTimeframe: 'Short-term',
+              roi: 7,
+              confidenceScore: 89
+            },
+            {
+              id: 'rec-' + Date.now() + '-5',
+              title: 'Battery Storage Thermal Management Enhancement',
+              description: 'Thermal analysis of your battery storage system indicates suboptimal operating temperatures during mid-day charging cycles. Current temperatures are averaging 38°C during peak solar production, which accelerates degradation of lithium cells and reduces overall capacity over time.\n\nWe recommend implementing an advanced thermal management solution using phase-change materials and intelligent ventilation control. This system would maintain optimal cell temperatures between 20-25°C regardless of ambient conditions or charge/discharge rates. Implementation includes installation of temperature monitoring sensors at 8 strategic points, a microcontroller-based ventilation system, and passive cooling materials within the battery enclosure.\n\nThis upgrade would extend battery lifespan by approximately 40% and improve charge efficiency by 8-12%, resulting in significant long-term cost savings and improved system reliability.',
+              impact: {
+                energyProduction: 0,
+                costSavings: 25,
+                co2Reduction: 15
+              },
+              priority: 'Medium',
+              category: 'Efficiency',
+              implementationTimeframe: 'Short-term',
+              roi: 11,
+              confidenceScore: 92
+            }
+          ];
+          
+          setRecommendations(newRecommendations);
+          setSelectedRecommendation(null); // Clear selected recommendation
+        } catch (error) {
+          console.error("Error generating recommendations:", error);
+          // Keep existing recommendations if there's an error
+        } finally {
+          setIsGenerating(false);
+        }
+      }, 2000);
+    };
+
+    // Function to implement recommendation
+    const implementRecommendation = (recId: string) => {
+      setImplementing(recId);
+      
+      // Simulate implementation process
+      setTimeout(() => {
+        setImplementationStatus(prev => ({
+          ...prev,
+          [recId]: 'Implementing...'
+        }));
+        
+        // After another delay, mark as done
+        setTimeout(() => {
+          setImplementationStatus(prev => ({
+            ...prev,
+            [recId]: 'Implementation complete'
+          }));
+          setImplementing(null);
+        }, 2000);
+      }, 1500);
+    };
+
+    return (
+      <div className="bg-gray-900 rounded-xl shadow-xl p-5 mb-8">
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center">
+            <BarChart2 size={24} className="text-blue-500 mr-2" />
+            <h2 className="text-xl font-bold text-white">AI-Driven Recommendations</h2>
+          </div>
+          
+          <div className="flex space-x-2">
+            <button 
+              onClick={() => setFilterPriority(null)} 
+              className={`px-3 py-1 text-xs rounded-full transition-colors ${!filterPriority ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-800'}`}
             >
-              <input type="checkbox" />
-              <div className="collapse-title text-xl font-medium flex justify-between items-center">
-                <span>{recommendation.title}</span>
-                <span className={`badge ${
-                  recommendation.priority === 'High' ? 'badge-error' :
-                  recommendation.priority === 'Medium' ? 'badge-warning' :
-                  'badge-success'
-                }`}>
-                  {recommendation.priority} Priority
-                </span>
-              </div>
-              <div className="collapse-content">
-                <p className="mt-2">{recommendation.description}</p>
-                <div className="mt-4 space-y-2">
-                  <p className="text-success">{recommendation.impact}</p>
-                  <p className="text-info">ROI: {recommendation.roi}</p>
-                  <div className="mt-4">
-                    <p className="font-semibold">Analysis:</p>
-                    <p>{recommendation.analysis}</p>
-                  </div>
-                  <div className="mt-4">
-                    <p className="font-semibold">Implementation Steps:</p>
-                    <ul className="list-disc list-inside">
-                      {recommendation.steps.map((step, idx) => (
-                        <li key={idx}>{step}</li>
-                      ))}
-                    </ul>
+              All
+            </button>
+            <button 
+              onClick={() => setFilterPriority('High')} 
+              className={`px-3 py-1 text-xs rounded-full transition-colors ${filterPriority === 'High' ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-800'}`}
+            >
+              High Priority
+            </button>
+            <button 
+              onClick={() => setFilterPriority('Medium')} 
+              className={`px-3 py-1 text-xs rounded-full transition-colors ${filterPriority === 'Medium' ? 'bg-amber-600 text-white' : 'text-gray-300 hover:bg-gray-800'}`}
+            >
+              Medium
+            </button>
+            <button 
+              onClick={() => setFilterPriority('Low')} 
+              className={`px-3 py-1 text-xs rounded-full transition-colors ${filterPriority === 'Low' ? 'bg-green-600 text-white' : 'text-gray-300 hover:bg-gray-800'}`}
+            >
+              Low
+            </button>
+          </div>
+        </div>
+
+        {/* Recommendation cards */}
+        <div className="space-y-3">
+          {displayedRecommendations.map(rec => (
+            <div 
+              key={rec.id}
+              className={`bg-gray-800 rounded-lg p-4 cursor-pointer transition-all hover:bg-gray-750 ${selectedRecommendation?.id === rec.id ? 'ring-2 ring-blue-500' : ''}`}
+              onClick={() => setSelectedRecommendation(rec)}
+            >
+              <div className="flex justify-between items-start">
+                <div className="flex items-start space-x-3">
+                  <div className="mt-1">{getCategoryIcon(rec.category)}</div>
+                  <div>
+                    <h3 className="font-medium text-white">{rec.title}</h3>
+                    <p className="text-sm text-gray-400 mt-1 line-clamp-2">{rec.description}</p>
                   </div>
                 </div>
+                
+                <div className={`px-3 py-1 text-xs rounded-full ${
+                  rec.priority === 'High' ? 'bg-red-500/20 text-red-400' : 
+                  rec.priority === 'Medium' ? 'bg-amber-500/20 text-amber-400' : 
+                  'bg-green-500/20 text-green-400'
+                }`}>
+                  {rec.priority} Priority
+                </div>
               </div>
-            </motion.div>
+              
+              {selectedRecommendation?.id === rec.id && (
+                <div className="mt-4 pt-4 border-t border-gray-700">
+                  {/* Detailed description */}
+                  <div className="mb-4 text-sm text-gray-300 whitespace-pre-line">
+                    {rec.description}
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div className="bg-gray-850 rounded-lg p-3">
+                      <div className="text-xs text-gray-500 uppercase mb-1">ROI Timeframe</div>
+                      <div className="flex items-center">
+                        <Calendar size={16} className="text-blue-400 mr-2" />
+                        <span className="text-white">{formatROI(rec.roi)}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gray-850 rounded-lg p-3">
+                      <div className="text-xs text-gray-500 uppercase mb-1">AI Confidence</div>
+                      <div className="flex items-center">
+                        <div className="w-full bg-gray-700 rounded-full h-2.5">
+                          <div 
+                            className={`h-2.5 rounded-full ${
+                              rec.confidenceScore > 90 ? 'bg-green-500' : 
+                              rec.confidenceScore > 75 ? 'bg-blue-500' : 
+                              rec.confidenceScore > 60 ? 'bg-amber-500' : 'bg-red-500'
+                            }`}
+                            style={{ width: `${rec.confidenceScore}%` }}
+                          ></div>
+                        </div>
+                        <span className="ml-2 text-white">{rec.confidenceScore}%</span>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gray-850 rounded-lg p-3">
+                      <div className="text-xs text-gray-500 uppercase mb-1">Implementation</div>
+                      <div className="flex items-center">
+                        <Battery size={16} className="text-green-400 mr-2" />
+                        <span className="text-white">{rec.implementationTimeframe}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-850 rounded-lg p-4 mb-4">
+                    <h4 className="text-sm font-medium text-white mb-3">Projected Impact</h4>
+                    <div className="flex justify-between items-center">
+                      <div className="text-center">
+                        <div className="text-xs text-gray-500 mb-1">Energy Production</div>
+                        <div className="text-xl font-bold text-green-400">+{rec.impact.energyProduction}%</div>
+                      </div>
+                      <div className="h-10 w-px bg-gray-700"></div>
+                      <div className="text-center">
+                        <div className="text-xs text-gray-500 mb-1">Cost Savings</div>
+                        <div className="text-xl font-bold text-blue-400">+{rec.impact.costSavings}%</div>
+                      </div>
+                      <div className="h-10 w-px bg-gray-700"></div>
+                      <div className="text-center">
+                        <div className="text-xs text-gray-500 mb-1">CO₂ Reduction</div>
+                        <div className="text-xl font-bold text-gray-400">+{rec.impact.co2Reduction}%</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-end space-x-3">
+                    <button className="px-4 py-2 text-sm bg-transparent border border-gray-600 hover:border-gray-500 text-gray-300 rounded-lg">
+                      Save for Later
+                    </button>
+                    <button 
+                      className={`px-4 py-2 text-sm rounded-lg ${
+                        implementing === rec.id 
+                          ? 'bg-blue-800 text-gray-300 cursor-wait' 
+                          : implementationStatus[rec.id] 
+                            ? 'bg-green-600 hover:bg-green-700 text-white' 
+                            : 'bg-blue-600 hover:bg-blue-700 text-white'
+                      }`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!implementing && !implementationStatus[rec.id]) {
+                          implementRecommendation(rec.id);
+                        }
+                      }}
+                      disabled={implementing !== null}
+                    >
+                      {implementing === rec.id 
+                        ? 'Processing...' 
+                        : implementationStatus[rec.id] 
+                          ? implementationStatus[rec.id] 
+                          : 'Implement'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           ))}
         </div>
+        
+        {filteredRecommendations.length > 3 && (
+          <div className="mt-4 text-center">
+            <button
+              onClick={() => setShowAllRecommendations(!showAllRecommendations)}
+              className="text-blue-400 hover:text-blue-300 text-sm font-medium"
+            >
+              {showAllRecommendations ? 'Show Less' : `Show ${filteredRecommendations.length - 3} More Recommendations`}
+            </button>
+          </div>
+        )}
+        
+        <div className="mt-6 pt-6 border-t border-gray-800">
+          <div className="flex justify-between items-center">
+            <div className="text-sm text-gray-400">
+              Last updated: {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+            </div>
+            <button 
+              className={`flex items-center text-sm ${
+                isGenerating 
+                  ? 'text-gray-500 cursor-wait' 
+                  : 'text-blue-400 hover:text-blue-300'
+              }`}
+              onClick={isGenerating ? undefined : generateNewRecommendations}
+              disabled={isGenerating}
+            >
+              {isGenerating ? (
+                <>
+                  <div className="animate-spin h-4 w-4 border-b-2 border-blue-400 rounded-full mr-2"></div>
+                  Generating New Recommendations...
+                </>
+              ) : (
+                <>
+                  <Zap size={16} className="mr-1" />
+                  Generate New Recommendations
+                </>
+              )}
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const AlertsCard = () => (
     <div className="card bg-base-200 shadow-xl">
@@ -552,6 +941,37 @@ const RenewableEnergy = () => {
       </div>
     </div>
   );
+
+  // Get icon based on category
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'Optimization': return <TrendingUp className="text-blue-500" />;
+      case 'Maintenance': return <AlertTriangle className="text-amber-500" />;
+      case 'Expansion': return <ArrowUpRight className="text-green-500" />;
+      case 'Efficiency': return <Zap className="text-purple-500" />;
+      default: return <BarChartIcon className="text-gray-500" />;
+    }
+  };
+
+  // Generate impact data for charts
+  const getImpactData = (rec: AIRecommendation) => [
+    { name: 'Energy', value: rec.impact.energyProduction, fill: '#16a34a' },
+    { name: 'Cost', value: rec.impact.costSavings, fill: '#2563eb' },
+    { name: 'CO₂', value: rec.impact.co2Reduction, fill: '#64748b' }
+  ];
+
+  // Return time to ROI in user-friendly format
+  const formatROI = (months: number) => {
+    if (months < 1) return 'Less than 1 month';
+    if (months === 1) return '1 month';
+    if (months < 12) return `${months} months`;
+    
+    const years = Math.floor(months / 12);
+    const remainingMonths = months % 12;
+    
+    if (remainingMonths === 0) return `${years} ${years === 1 ? 'year' : 'years'}`;
+    return `${years} ${years === 1 ? 'year' : 'years'}, ${remainingMonths} ${remainingMonths === 1 ? 'month' : 'months'}`;
+  };
 
   return (
     <div className="min-h-screen bg-base-100 p-4">
@@ -1141,7 +1561,7 @@ const RenewableEnergy = () => {
         </div>
 
         {/* Recommendations */}
-        <RecommendationsCard />
+        <AIRecommendationsPanel />
 
         {/* Alerts */}
         <AlertsCard />

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Play, ExternalLink, ThumbsUp, Eye, Calendar, Search, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Play, ExternalLink, ThumbsUp, Eye, Calendar, Search, RefreshCw, X, Maximize, Minimize } from 'lucide-react';
 
 // Types for YouTube API responses
 interface YouTubeVideo {
@@ -52,6 +52,11 @@ const YouTubeLearning: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeTopic, setActiveTopic] = useState<string>('sustainability');
   const [nextPageToken, setNextPageToken] = useState<string | null>(null);
+  
+  // New state for video player
+  const [selectedVideo, setSelectedVideo] = useState<YouTubeVideo | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const videoPlayerRef = useRef<HTMLDivElement>(null);
 
   // Function to fetch videos from YouTube API
   const fetchVideos = async (query: string, pageToken: string | null = null) => {
@@ -137,6 +142,57 @@ const YouTubeLearning: React.FC = () => {
     return num.toString();
   };
 
+  // Toggle fullscreen mode for the video player
+  const toggleFullscreen = () => {
+    if (!videoPlayerRef.current) return;
+    
+    if (!isFullscreen) {
+      if (videoPlayerRef.current.requestFullscreen) {
+        videoPlayerRef.current.requestFullscreen();
+      } else if ((videoPlayerRef.current as any).webkitRequestFullscreen) {
+        (videoPlayerRef.current as any).webkitRequestFullscreen();
+      } else if ((videoPlayerRef.current as any).msRequestFullscreen) {
+        (videoPlayerRef.current as any).msRequestFullscreen();
+      }
+      setIsFullscreen(true);
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if ((document as any).webkitExitFullscreen) {
+        (document as any).webkitExitFullscreen();
+      } else if ((document as any).msExitFullscreen) {
+        (document as any).msExitFullscreen();
+      }
+      setIsFullscreen(false);
+    }
+  };
+
+  // Listen for fullscreen change events
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+    };
+  }, []);
+
+  // Clean up by closing video player when component unmounts
+  useEffect(() => {
+    return () => {
+      setSelectedVideo(null);
+    };
+  }, []);
+
   return (
     <div className="bg-base-200 rounded-lg p-4">
       <div className="flex flex-col gap-4">
@@ -212,14 +268,12 @@ const YouTubeLearning: React.FC = () => {
                     className="w-full h-48 object-cover"
                   />
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                    <a
-                      href={`https://www.youtube.com/watch?v=${video.id.videoId}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button
+                      onClick={() => setSelectedVideo(video)}
                       className="btn btn-primary btn-circle"
                     >
                       <Play className="h-6 w-6" />
-                    </a>
+                    </button>
                   </div>
                 </figure>
                 <div className="card-body p-4">
@@ -248,15 +302,13 @@ const YouTubeLearning: React.FC = () => {
                     )}
                   </div>
                   <div className="card-actions justify-end mt-3">
-                    <a
-                      href={`https://www.youtube.com/watch?v=${video.id.videoId}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn btn-xs btn-outline"
+                    <button
+                      onClick={() => setSelectedVideo(video)}
+                      className="btn btn-xs btn-primary w-full"
                     >
-                      <ExternalLink className="h-3 w-3 mr-1" />
-                      Watch
-                    </a>
+                      <Play className="h-3 w-3 mr-1" />
+                      Watch Video
+                    </button>
                   </div>
                 </div>
               </div>
@@ -291,6 +343,76 @@ const YouTubeLearning: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Video Player Modal */}
+      {selectedVideo && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 md:p-8">
+          <div 
+            ref={videoPlayerRef}
+            className={`relative bg-black rounded-lg overflow-hidden max-w-5xl w-full ${isFullscreen ? 'h-full' : 'max-h-[80vh]'}`}
+          >
+            <div className="absolute top-2 right-2 z-10 flex space-x-2">
+              <button 
+                onClick={toggleFullscreen}
+                className="p-2 bg-black/50 hover:bg-black/70 rounded-full text-white"
+              >
+                {isFullscreen ? <Minimize size={20} /> : <Maximize size={20} />}
+              </button>
+              <button 
+                onClick={() => setSelectedVideo(null)}
+                className="p-2 bg-black/50 hover:bg-black/70 rounded-full text-white"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="aspect-video w-full h-full">
+              <iframe
+                src={`https://www.youtube.com/embed/${selectedVideo.id.videoId}?autoplay=1&rel=0`}
+                title={selectedVideo.snippet.title}
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full h-full"
+              ></iframe>
+            </div>
+            
+            {!isFullscreen && (
+              <div className="p-4 bg-gray-900">
+                <h3 className="text-lg font-semibold text-white mb-2">
+                  {selectedVideo.snippet.title}
+                </h3>
+                <p className="text-sm text-gray-300 mb-3">
+                  {selectedVideo.snippet.description}
+                </p>
+                <div className="flex justify-between items-center text-gray-400 text-sm">
+                  <div>
+                    {selectedVideo.snippet.channelTitle}
+                  </div>
+                  <div className="flex items-center gap-4">
+                    {selectedVideo.statistics && (
+                      <>
+                        <div className="flex items-center">
+                          <Eye className="h-4 w-4 mr-1" />
+                          <span>{formatViewCount(selectedVideo.statistics.viewCount)}</span>
+                        </div>
+                        <div className="flex items-center">
+                          <ThumbsUp className="h-4 w-4 mr-1" />
+                          <span>{formatViewCount(selectedVideo.statistics.likeCount || '0')}</span>
+                        </div>
+                      </>
+                    )}
+                    <div className="flex items-center">
+                      <Calendar className="h-4 w-4 mr-1" />
+                      <span>{formatDate(selectedVideo.snippet.publishedAt)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
