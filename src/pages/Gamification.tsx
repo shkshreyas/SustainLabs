@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Star, Target, Award, Zap, Network, Server, Battery, Cloud, ChevronDown, Users, BarChart2, BookOpen, UserRound, FileText, MessageSquare, PlaySquare } from 'lucide-react';
+import { Trophy, Star, Target, Award, Zap, Network, Server, Battery, Cloud, ChevronDown, Users, BarChart2, BookOpen, UserRound, FileText, MessageSquare, PlaySquare, Heart } from 'lucide-react';
 import LearningRoadmap from '../components/learning/LearningRoadmap';
 import InterviewPrep from '../components/learning/interview';
 import ResumeProcessor from '../components/learning/resume';
 import Chatbot from '../components/learning/aichatsustain';
 import YouTubeLearning from '../components/learning/YouTubeLearning';
+import AIHeartRateMonitor from '../components/learning/AIHeartRateMonitor';
+import { MdEco } from 'react-icons/md';
 
 const EnhancedGamification = () => {
   // State management
@@ -145,18 +147,16 @@ const EnhancedGamification = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 p-1 md:p-6">
       {/* Navigation */}
       <div className="navbar bg-base-200 rounded-box mb-2 md:mb-6 p-1 md:p-2">
-        <div className="flex-1">
-          <div className="btn btn-ghost text-sm md:text-xl px-2 md:px-4">EcoNexus Learning</div>
-        </div>
-        <div className="flex-none w-auto max-w-[70%] md:max-w-none overflow-x-auto hide-scrollbar">
-          <div className="tabs tabs-boxed bg-base-300">
+        <div className="flex-none w-full overflow-x-auto hide-scrollbar">
+          <div className="tabs tabs-boxed bg-base-300 w-full justify-center">
             {[
               { id: 'dashboard', label: 'Dashboard', icon: BarChart2 },
               { id: 'interview', label: 'Interview Prep', icon: UserRound },
               { id: 'resume', label: 'Resume Builder', icon: FileText },
               { id: 'learning', label: 'Learning Paths', icon: BookOpen },
               { id: 'videos', label: 'Learning Videos', icon: PlaySquare },
-              { id: 'aichat', label: 'AI Assistant', icon: MessageSquare }
+              { id: 'aichat', label: 'AI Assistant', icon: MessageSquare },
+              { id: 'heartrate', label: 'Heart Rate', icon: Heart }
             ].map(tab => (
               <a
                 key={tab.id}
@@ -171,7 +171,8 @@ const EnhancedGamification = () => {
                      tab.id === 'resume' ? 'Resume' : 
                      tab.id === 'dashboard' ? 'Home' : 
                      tab.id === 'videos' ? 'Videos' :
-                     tab.id === 'aichat' ? 'Chat' : tab.label.substring(0, 6)) 
+                     tab.id === 'aichat' ? 'Chat' :
+                     tab.id === 'heartrate' ? 'Heart' : tab.label.substring(0, 6)) 
                     : tab.label}
                 </span>
               </a>
@@ -217,6 +218,12 @@ const EnhancedGamification = () => {
             <div className="card bg-base-200 shadow-xl overflow-hidden">
               <div className="card-body p-0 md:p-4">
                 <YouTubeLearning />
+              </div>
+            </div>
+          ) : activeTab === 'heartrate' ? (
+            <div className="card bg-base-200 shadow-xl overflow-hidden">
+              <div className="card-body p-0 md:p-4">
+                <AIHeartRateMonitor />
               </div>
             </div>
           ) : (
