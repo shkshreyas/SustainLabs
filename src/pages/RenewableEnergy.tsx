@@ -717,7 +717,7 @@ const RenewableEnergy = () => {
           <div className="flex items-center">
             <BarChart2 size={24} className="text-blue-500 mr-2" />
             <h2 className="text-xl font-bold text-white">AI-Driven Recommendations</h2>
-          </div>
+        </div>
           
           <div className="flex space-x-2">
             <button 
@@ -770,8 +770,8 @@ const RenewableEnergy = () => {
                   'bg-green-500/20 text-green-400'
                 }`}>
                   {rec.priority} Priority
-                </div>
               </div>
+                  </div>
               
               {selectedRecommendation?.id === rec.id && (
                 <div className="mt-4 pt-4 border-t border-gray-700">
@@ -786,8 +786,8 @@ const RenewableEnergy = () => {
                       <div className="flex items-center">
                         <Calendar size={16} className="text-blue-400 mr-2" />
                         <span className="text-white">{formatROI(rec.roi)}</span>
-                      </div>
-                    </div>
+                </div>
+              </div>
                     
                     <div className="bg-gray-850 rounded-lg p-3">
                       <div className="text-xs text-gray-500 uppercase mb-1">AI Confidence</div>
@@ -906,9 +906,9 @@ const RenewableEnergy = () => {
               )}
             </button>
           </div>
-        </div>
       </div>
-    );
+    </div>
+  );
   };
 
   const AlertsCard = () => (
@@ -1078,21 +1078,21 @@ const RenewableEnergy = () => {
                 />
                 
                 <div className="relative z-10 h-80">
-                  <AreaChart
-                    className="h-80 mt-2"
-                    data={energyData}
-                    index="time"
-                    categories={['solar', 'wind', 'battery']}
-                    colors={[colorScheme.solar, colorScheme.wind, colorScheme.battery]}
+              <AreaChart
+                  className="h-80 mt-2"
+                data={energyData}
+                index="time"
+                categories={['solar', 'wind', 'battery']}
+                  colors={[colorScheme.solar, colorScheme.wind, colorScheme.battery]}
                     valueFormatter={(value) => `${value} kW`}
-                    showLegend={true}
-                    showGridLines={false}
-                    showAnimation={true}
-                    showXAxis={true}
-                    showYAxis={true}
-                    autoMinValue={true}
-                    minValue={0}
-                    yAxisWidth={40}
+                  showLegend={true}
+                  showGridLines={false}
+                  showAnimation={true}
+                  showXAxis={true}
+                  showYAxis={true}
+                  autoMinValue={true}
+                  minValue={0}
+                  yAxisWidth={40}
                     onValueChange={(v) => {
                       console.log('Hover value:', v);
                     }}
@@ -1137,7 +1137,7 @@ const RenewableEnergy = () => {
                     </div>
                   </motion.div>
                 </div>
-              </div>
+            </div>
               
               <div className="grid grid-cols-3 gap-4 mt-6">
                 <motion.div 
@@ -1165,7 +1165,7 @@ const RenewableEnergy = () => {
                       animate={{ width: `${Math.round(energyData.reduce((sum, item) => sum + item.solar, 0) / energyData.reduce((sum, item) => sum + item.solar + item.wind + item.battery, 0) * 100)}%` }}
                       transition={{ duration: 1, delay: 0.3 }}
                     />
-                  </div>
+          </div>
                 </motion.div>
                 
                 <motion.div 
@@ -1193,7 +1193,7 @@ const RenewableEnergy = () => {
                       animate={{ width: `${Math.round(energyData.reduce((sum, item) => sum + item.wind, 0) / energyData.reduce((sum, item) => sum + item.solar + item.wind + item.battery, 0) * 100)}%` }}
                       transition={{ duration: 1, delay: 0.4 }}
                     />
-                  </div>
+                </div>
                 </motion.div>
                 
                 <motion.div 
@@ -1247,7 +1247,7 @@ const RenewableEnergy = () => {
                   <div className="flex items-center gap-2">
                     <Zap className="w-4 h-4 text-blue-400" />
                     <span className="font-medium">Total Energy Today:</span>
-                  </div>
+              </div>
                   <span className="font-bold text-blue-400">
                     {Math.round(energyData.reduce((sum, item) => sum + item.solar + item.wind + item.battery, 0) / 24)} kWh
                   </span>
@@ -1818,7 +1818,7 @@ const RenewableEnergy = () => {
                         
                         return (
                           <div 
-                            key={i}
+                            key={i} 
                             className="flex-1 mx-px rounded-t-md"
                             style={{ 
                               height: `${20 + Math.sin(i/3) * 10 + Math.random() * 20}%`,
@@ -1841,7 +1841,7 @@ const RenewableEnergy = () => {
                         
                         return (
                           <div 
-                            key={i}
+                            key={i} 
                             className="flex-1 mx-px rounded-t-md"
                             style={{ 
                               height: `${15 + Math.sin(i/3) * 8 + Math.random() * 10}%`,

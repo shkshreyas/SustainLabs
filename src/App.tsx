@@ -7,6 +7,8 @@ import { useAuthStore } from './store/authStore';
 import { useAppStore } from './store/appStore';
 import { useDataStore } from './store/dataStore';
 import MaintenanceDashboard from './components/MaintenanceDashboard';
+import ErrorBoundary from './components/ErrorBoundary';
+import { Web3Provider } from './contexts/Web3Context';
 
 // Lazy load pages for better initial load performance
 const LandingPage = lazy(() => import('./pages/LandingPage'));
@@ -146,9 +148,13 @@ const AppContent = () => {
 
 const App: React.FC = () => {
   return (
-    <Router>
-      <AppContent />
-    </Router>
+    <ErrorBoundary>
+      <Web3Provider>
+        <Router>
+          <AppContent />
+        </Router>
+      </Web3Provider>
+    </ErrorBoundary>
   );
 };
 

@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Star, Target, Award, Zap, Network, Server, Battery, Cloud, ChevronDown, Users, BarChart2, BookOpen, UserRound, FileText, MessageSquare, PlaySquare, Heart } from 'lucide-react';
+import { Trophy, Star, Target, Award, Zap, Network, Server, Battery, Cloud, ChevronDown, Users, BarChart2, BookOpen, UserRound, FileText, MessageSquare, PlaySquare, Heart, Layers } from 'lucide-react';
 import LearningRoadmap from '../components/learning/LearningRoadmap';
 import InterviewPrep from '../components/learning/interview';
 import ResumeProcessor from '../components/learning/resume';
 import Chatbot from '../components/learning/aichatsustain';
 import YouTubeLearning from '../components/learning/YouTubeLearning';
 import AIHeartRateMonitor from '../components/learning/AIHeartRateMonitor';
+import DraftEase from '../components/learning/DraftEase';
 import { MdEco } from 'react-icons/md';
 
 const EnhancedGamification = () => {
@@ -156,7 +157,8 @@ const EnhancedGamification = () => {
               { id: 'learning', label: 'Learning Paths', icon: BookOpen },
               { id: 'videos', label: 'Learning Videos', icon: PlaySquare },
               { id: 'aichat', label: 'AI Assistant', icon: MessageSquare },
-              { id: 'heartrate', label: 'Heart Rate', icon: Heart }
+              { id: 'heartrate', label: 'Heart Rate', icon: Heart },
+              { id: 'draftease', label: 'DraftEase', icon: Layers }
             ].map(tab => (
               <a
                 key={tab.id}
@@ -165,14 +167,15 @@ const EnhancedGamification = () => {
               >
                 <tab.icon className="w-3 h-3 md:w-4 md:h-4" />
                 <span className="text-xs md:text-sm whitespace-nowrap">
-                  {isMobile ? 
-                    (tab.id === 'interview' ? 'Interview' : 
-                     tab.id === 'learning' ? 'Learn' : 
-                     tab.id === 'resume' ? 'Resume' : 
-                     tab.id === 'dashboard' ? 'Home' : 
+                  {isMobile ?
+                    (tab.id === 'interview' ? 'Interview' :
+                     tab.id === 'learning' ? 'Learn' :
+                     tab.id === 'resume' ? 'Resume' :
+                     tab.id === 'dashboard' ? 'Home' :
                      tab.id === 'videos' ? 'Videos' :
                      tab.id === 'aichat' ? 'Chat' :
-                     tab.id === 'heartrate' ? 'Heart' : tab.label.substring(0, 6)) 
+                     tab.id === 'heartrate' ? 'Heart' :
+                     tab.id === 'draftease' ? 'Draft' : tab.label.substring(0, 6))
                     : tab.label}
                 </span>
               </a>
@@ -199,7 +202,44 @@ const EnhancedGamification = () => {
           ) : activeTab === 'interview' ? (
             <div className="card bg-base-200 shadow-xl overflow-hidden">
               <div className="card-body p-0 md:p-4">
-                <InterviewPrep />
+                <div className="flex flex-col space-y-6 p-6">
+                  <h2 className="text-2xl font-bold text-primary">Custom Interview Preparation</h2>
+                  
+                  <div className="form-control w-full">
+                    <label className="label">
+                      <span className="label-text text-base-content">Job Role</span>
+                    </label>
+                    <input 
+                      type="text" 
+                      placeholder="Enter the job role..." 
+                      className="input input-bordered w-full text-base-content bg-base-200" 
+                    />
+                  </div>
+
+                  <div className="form-control w-full">
+                    <label className="label">
+                      <span className="label-text text-base-content">Job Description</span>
+                    </label>
+                    <textarea 
+                      placeholder="Paste the job description..." 
+                      className="textarea textarea-bordered h-32 text-base-content bg-base-200"
+                    />
+                  </div>
+
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text text-base-content">Number of Questions</span>
+                    </label>
+                    <div className="flex flex-wrap gap-3">
+                      <button className="btn btn-primary">5 Questions</button>
+                      <button className="btn btn-outline">10 Questions</button>
+                      <button className="btn btn-outline">15 Questions</button>
+                      <button className="btn btn-outline">20 Questions</button>
+                    </div>
+                  </div>
+
+                  <button className="btn btn-primary w-full">Generate Interview Questions</button>
+                </div>
               </div>
             </div>
           ) : activeTab === 'resume' ? (
@@ -224,6 +264,12 @@ const EnhancedGamification = () => {
             <div className="card bg-base-200 shadow-xl overflow-hidden">
               <div className="card-body p-0 md:p-4">
                 <AIHeartRateMonitor />
+              </div>
+            </div>
+          ) : activeTab === 'draftease' ? (
+            <div className="card bg-base-200 shadow-xl overflow-hidden">
+              <div className="card-body p-0 md:p-4">
+                <DraftEase />
               </div>
             </div>
           ) : (
@@ -379,15 +425,15 @@ const EnhancedGamification = () => {
           </motion.div>
         )}
       </AnimatePresence>
-      
+
       {/* Subscribe to Newsletter */}
       <div className="card bg-base-200 shadow-xl mt-4 md:mt-6">
         <div className="card-body p-2 md:p-6">
           <h2 className="text-sm md:text-lg font-bold text-base-content">Subscribe to Our Newsletter and Get Updated to our Latest Announcement</h2>
           <div className="flex flex-col sm:flex-row gap-2 mt-2">
-            <input 
-              type="email" 
-              placeholder="Enter your email" 
+            <input
+              type="email"
+              placeholder="Enter your email"
               className="input input-bordered w-full"
             />
             <button className="btn btn-primary">Subscribe</button>

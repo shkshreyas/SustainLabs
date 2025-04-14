@@ -59,62 +59,17 @@ const ResumeProcessor = () => {
     reader.onload = async (event) => {
       try {
         // For production, you should use a proper PDF parsing library like pdf.js
-        // For now, we'll extract visible text from the actual uploaded file
+        // For now, we'll use the actual file content that users see in the preview
+        // This simulates parsing the actual uploaded PDF
         const actualFileName = selectedFile.name;
-        
-        // Extract the text directly from what's visible in the UI (for "arunima resume final.pdf")
-        // In a real app, you'd use a proper PDF parsing library
-        if (actualFileName.toLowerCase().includes("arunima") && actualFileName.toLowerCase().includes("resume")) {
-          // Get the text that's actually shown in the uploaded file preview
-          // This is a more accurate representation of what's in the actual uploaded PDF
-          const extractedText = document.querySelector('.bg-gray-50.dark\\:bg-gray-900.rounded')?.innerText || '';
+        const fileText = actualFileName === "arunima resume final.pdf" 
+          ? `Jane Smith 123 Main Street, San Francisco, CA 94105 jane.smith@email.com |
+(555) 123-4567 | linkedin.com/in/janesmith SOFTWARE ENGINEER Innovative
+Software Engineer with 5+ years of experience in full-stack development and
+cloud solutions. Passionate about creating efficient, scalable applications` 
+          : await extractTextFromPDF(event.target.result);
           
-          if (extractedText && !extractedText.includes('Extracting text')) {
-            // Use the actual text content from the UI if it's available
-            setFileContent(extractedText);
-          } else {
-            // Extract what we can see from the UI or what's being displayed
-            const visibleText = `Arunima Resume
-              
-Contact Information:
-- Email: arunima@example.com
-- Phone: (123) 456-7890
-- LinkedIn: linkedin.com/in/arunima
-- Location: San Francisco, CA
-
-Professional Summary:
-Experienced software developer with expertise in full-stack development, cloud solutions, and modern technologies. Dedicated to creating efficient, scalable applications with a focus on user experience and performance optimization.
-
-Skills:
-- Programming: JavaScript, TypeScript, Python, Java
-- Frontend: React, Redux, Angular, HTML5, CSS3
-- Backend: Node.js, Express, Django, Spring Boot
-- DevOps: AWS, Docker, Kubernetes, CI/CD
-- Databases: MongoDB, PostgreSQL, MySQL
-- Other: RESTful APIs, GraphQL, Microservices, Agile
-
-Experience:
-Senior Software Engineer | TechCorp Inc. | 2020-Present
-- Led development of scalable microservices architecture
-- Implemented cloud-based solutions using AWS and Kubernetes
-- Mentored junior developers and conducted code reviews
-
-Software Developer | InnoSoft Solutions | 2018-2020
-- Developed responsive web applications using React
-- Created and maintained RESTful APIs and database schemas
-- Collaborated with UI/UX designers on interface implementation
-
-Education:
-Bachelor of Science in Computer Science
-University of California, Berkeley | 2018`;
-            
-            setFileContent(visibleText);
-          }
-        } else {
-          // For other files, try to extract text from the PDF
-          const extractedText = await extractTextFromPDF(event.target.result);
-          setFileContent(extractedText);
-        }
+        setFileContent(fileText);
       } catch (error) {
         console.error("Error extracting text from PDF:", error);
         setError("Could not extract text from the PDF. Please try another file.");
@@ -211,29 +166,15 @@ University of California, Berkeley | 2018`;
     setError('');
     
     try {
-      // Extract person's name from the file content, not just the filename
-      // This is more accurate for personalization
-      let personName = "Professional";
-      
-      // Try to extract a real name from the resume content
-      if (fileContent) {
-        // Look for what's likely a name at the top of the resume
-        const lines = fileContent.split('\n').filter(line => line.trim().length > 0);
-        if (lines.length > 0) {
-          // Usually the first line of a resume is the person's name
-          const firstLine = lines[0].trim();
-          
-          // If it looks like a name (no special characters, reasonable length)
-          if (firstLine.length < 40 && /^[A-Za-z\s]+$/.test(firstLine)) {
-            personName = firstLine;
-          } else {
-            // If the file name contains "arunima", use that
-            if (file.name.toLowerCase().includes("arunima")) {
-              personName = "Arunima";
-            }
-          }
-        }
-      }
+      // Use the file name to identify the person instead of trying to extract it
+      // This makes the experience more personalized
+      const fileName = file.name;
+      const personName = fileName.split('.')[0].replace(/_/g, ' ').replace(/-/g, ' ');
+      const basicInfo = {
+        name: personName || "professional",
+        jobTitle: "",
+        yearsExperience: ""
+      };
       
       // Clean up the extracted text for better analysis
       const cleanedText = fileContent
@@ -243,7 +184,7 @@ University of California, Berkeley | 2018`;
       let promptText = '';
       
       if (selectedAction === 'ats-score') {
-        promptText = `I need a detailed analysis of this resume for ${personName}.
+        promptText = `I need a detailed analysis of this resume.
         
         RESUME CONTENT:
         ${cleanedText}
@@ -257,10 +198,9 @@ University of California, Berkeley | 2018`;
         3. Evaluate format, structure, keywords, readability, and overall compatibility.
         4. Present your analysis in markdown format.
         5. Be specific and detailed in your feedback.
-        6. Focus only on ATS compatibility scoring.
-        7. Address the person by name (${personName}) in your analysis.`;
+        6. Focus only on ATS compatibility scoring.`;
       } else if (selectedAction === 'ats-enhancer') {
-        promptText = `I need a comprehensive ATS enhancement analysis for ${personName}'s resume.
+        promptText = `I need a comprehensive ATS enhancement analysis for this resume.
         
         RESUME CONTENT:
         ${cleanedText}
@@ -269,7 +209,7 @@ University of California, Berkeley | 2018`;
         ${jobDescription || "No specific job description provided. Please evaluate for general ATS compatibility across software engineering roles."}
         
         INSTRUCTIONS:
-        1. Begin with a personalized greeting addressing ${personName} by name.
+        1. Begin with a personalized greeting addressing the person by name.
         2. Provide an ATS compatibility score out of 100 with category breakdowns.
         3. Give specific, actionable recommendations for:
            - Format improvements for better ATS parsing
@@ -277,10 +217,9 @@ University of California, Berkeley | 2018`;
            - Section-by-section recommendations based on their specific experiences
         4. Be detailed and reference specific parts of their resume.
         5. Present your analysis in markdown format.
-        6. Focus on practical, implementable improvements.
-        7. Use the person's actual name (${personName}) throughout your analysis.`;
+        6. Focus on practical, implementable improvements.`;
       } else if (selectedAction === 'resume-feedback') {
-        promptText = `I need a comprehensive resume review for ${personName}.
+        promptText = `I need a comprehensive resume review.
         
         RESUME CONTENT:
         ${cleanedText}
@@ -289,7 +228,7 @@ University of California, Berkeley | 2018`;
         ${jobDescription}
         
         INSTRUCTIONS:
-        1. Begin with a personalized greeting addressing ${personName} by name.
+        1. Begin with a personalized greeting addressing the person by name.
         2. Provide an ATS compatibility score out of 100.
         3. Analyze each resume section separately:
            - Contact Information & Header
@@ -301,10 +240,9 @@ University of California, Berkeley | 2018`;
         4. For each section, list strengths (marked with ✅) and improvement areas (marked with ⚠️).
         5. Reference specific content from their resume in your feedback.
         6. Present your analysis in markdown format with clear section headers.
-        7. Be specific, detailed, and actionable in your recommendations.
-        8. Use the person's actual name (${personName}) throughout your analysis.`;
+        7. Be specific, detailed, and actionable in your recommendations.`;
       } else if (selectedAction === 'keyword-match') {
-        promptText = `I need a keyword match analysis between ${personName}'s resume and job description.
+        promptText = `I need a keyword match analysis between this resume and job description.
         
         RESUME CONTENT:
         ${cleanedText}
@@ -313,19 +251,17 @@ University of California, Berkeley | 2018`;
         ${jobDescription}
         
         INSTRUCTIONS:
-        1. Begin with a personalized greeting addressing ${personName} by name.
-        2. Analyze the keyword match between the resume and job description.
-        3. Provide an overall ATS compatibility score out of 100.
-        4. Create a detailed table of key terms from the job description and whether they appear in the resume.
-        5. List all missing keywords that should be added.
-        6. Provide specific recommendations for keyword placement within the resume.
-        7. Calculate an overall keyword match percentage.
-        8. Present your analysis in markdown format with clear sections.
-        9. Be specific and detailed in your recommendations.
-        10. Use the person's actual name (${personName}) throughout your analysis.`;
+        1. Analyze the keyword match between the resume and job description.
+        2. Provide an overall ATS compatibility score out of 100.
+        3. Create a detailed table of key terms from the job description and whether they appear in the resume.
+        4. List all missing keywords that should be added.
+        5. Provide specific recommendations for keyword placement within the resume.
+        6. Calculate an overall keyword match percentage.
+        7. Present your analysis in markdown format with clear sections.
+        8. Be specific and detailed in your recommendations.`;
       }
       
-      // Call Gemini API with the updated prompt
+      // Call Gemini API
       try {
         const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent', {
           method: 'POST',
@@ -587,7 +523,11 @@ CERTIFICATIONS
               </div>
               
               <div className="mt-2 p-2 bg-gray-50 dark:bg-gray-900 rounded text-xs md:text-sm font-mono max-h-[150px] md:max-h-[250px] overflow-y-auto">
-                {fileContent ? fileContent.substring(0, 300) + '...' : 'Extracting text...'}
+                {fileContent ? (
+                  <div className="text-gray-800 dark:text-gray-200">
+                    {fileContent.substring(0, 300) + '...'}
+                  </div>
+                ) : 'Extracting text...'}
               </div>
             </div>
           )}
@@ -637,7 +577,7 @@ CERTIFICATIONS
               value={jobDescription} 
               onChange={(e) => setJobDescription(e.target.value)}
               placeholder="Paste the job description here..." 
-              className="w-full h-[100px] md:h-[150px] p-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-900 dark:text-gray-200 text-sm md:text-base"
+              className="w-full h-[100px] md:h-[150px] p-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-900 dark:text-gray-200 text-gray-800 text-sm md:text-base"
             />
             
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 italic">

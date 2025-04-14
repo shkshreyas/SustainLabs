@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { ShoppingCart, TrendingUp, Clock, ArrowRight, Filter, Search, Bell, Download, Server, Wifi, Radio, Battery, Zap, Sun, Wind } from 'lucide-react';
+import { ShoppingCart, TrendingUp, Clock, ArrowRight, Filter, Search, Bell, Download, Server, Wifi, Radio, Battery, Zap, Sun, Wind, Wallet } from 'lucide-react';
 import { faker } from '@faker-js/faker';
+import { ethers } from 'ethers';
+import { useWeb3 } from '../contexts/Web3Context';
+import { EnergyPackage as BlockchainPackage } from '../contracts/types';
 
 // Enhanced market data generation for telecom focus
 const generateMarketData = () => {
@@ -50,16 +53,149 @@ const generateNetworkStats = () => ({
 
 const COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
 
-const Marketplace = () => {
-  const [marketData, setMarketData] = useState(generateMarketData());
+interface Notification {
+  id: string;
+  type: string;
+  message: string;
+  time: Date;
+}
+
+interface EnergyPackage {
+  id: string;
+  name: string;
+  provider: string;
+  price: number;
+  quantity: number;
+  trend: number;
+  timeLeft: number;
+  reliability: number;
+  sourceType: string;
+  carbonOffset: number;
+  efficiencyGain: number;
+  implementationTime: number;
+  optimizationMethod: string;
+  roi: number;
+  networkImpact: string;
+  peakReduction: number;
+}
+
+const trendValues = {
+  positive: 1,
+  neutral: 0,
+  negative: -1,
+} as const;
+
+type TrendValue = keyof typeof trendValues;
+
+const Marketplace: React.FC = () => {
+  const { web3State, connect } = useWeb3();
+  const [marketData, setMarketData] = useState<EnergyPackage[]>(generateMarketData());
   const [networkStats, setNetworkStats] = useState(generateNetworkStats());
   const [activeTab, setActiveTab] = useState('marketplace');
-  const [selectedPackage, setSelectedPackage] = useState(null);
-  const [notifications, setNotifications] = useState([]);
+  const [selectedPackage, setSelectedPackage] = useState<EnergyPackage | null>(null);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filterNetwork, setFilterNetwork] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState('grid');
   const [sortBy, setSortBy] = useState('price');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (web3State.connected) {
+      fetchBlockchainPackages();
+    }
+  }, [web3State.connected]);
+
+  const fetchBlockchainPackages = async () => {
+    if (!web3State.contract) return;
+
+    setIsLoading(true);
+    try {
+      // Fetch the total number of packages (you'll need to add this to the smart contract)
+      const totalPackages = await web3State.contract.totalPackages();
+      const packages: EnergyPackage[] = [];
+
+      for (let i = 0; i < totalPackages.toNumber(); i++) {
+        const blockchainPackage = await web3State.contract.packages(i);
+        if (blockchainPackage.active) {
+          packages.push(convertBlockchainPackage(blockchainPackage));
+        }
+      }
+
+      setMarketData(packages);
+    } catch (error) {
+      console.error('Error fetching blockchain packages:', error);
+      addNotification('error', 'Failed to fetch packages from blockchain');
+    }
+    setIsLoading(false);
+  };
+
+  const convertBlockchainPackage = (pkg: BlockchainPackage): EnergyPackage => ({
+    id: pkg.id,
+    name: `Energy Package #${pkg.id}`,
+    provider: pkg.seller,
+    price: parseFloat(ethers.utils.formatEther(pkg.price)),
+    quantity: pkg.energyAmount.toNumber(),
+    trend: 0,
+    timeLeft: pkg.validUntil.sub(Math.floor(Date.now() / 1000)).toNumber(),
+    reliability: 95,
+    sourceType: pkg.renewable ? 'Renewable' : 'Non-renewable',
+    carbonOffset: pkg.renewable ? 500 : 0,
+    efficiencyGain: 20,
+    implementationTime: 1,
+    optimizationMethod: pkg.optimizationMethod,
+    roi: 12,
+    networkImpact: 'Minimal',
+    peakReduction: 15
+  });
+
+  const handleTrade = async (pkg: EnergyPackage) => {
+    if (!web3State.connected) {
+      addNotification('warning', 'Please connect your wallet first');
+      connect();
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const tx = await web3State.contract!.buyPackage(
+        ethers.BigNumber.from(pkg.id),
+        {
+          value: ethers.utils.parseEther(pkg.price.toString())
+        }
+      );
+      await tx.wait();
+
+      addNotification('success', `Successfully purchased ${pkg.name}`);
+      fetchBlockchainPackages();
+    } catch (error) {
+      console.error('Error purchasing package:', error);
+      addNotification('error', 'Failed to purchase package');
+    }
+    setIsLoading(false);
+  };
+
+  const addNotification = (type: string, message: string) => {
+    setNotifications(prev => [{
+      id: Date.now().toString(),
+      type,
+      message,
+      time: new Date()
+    }, ...prev]);
+  };
+
+  const handleSort = (field: keyof EnergyPackage) => {
+    const sortedPackages = [...marketData].sort((a, b) => {
+      if (field === 'trend') {
+        const trendA = a.trend as unknown as TrendValue;
+        const trendB = b.trend as unknown as TrendValue;
+        return trendValues[trendB] - trendValues[trendA];
+      }
+      return (b[field] as number) - (a[field] as number);
+    });
+    setMarketData(sortedPackages);
+  };
 
   // Real-time updates simulation
   useEffect(() => {
@@ -108,6 +244,19 @@ const Marketplace = () => {
 
   return (
     <div className="space-y-6">
+      {/* Add Connect Wallet Button */}
+      {!web3State.connected && (
+        <div className="flex justify-end">
+          <button
+            className="btn btn-primary"
+            onClick={connect}
+          >
+            <Wallet className="w-4 h-4 mr-2" />
+            Connect Wallet
+          </button>
+        </div>
+      )}
+
       {/* Enhanced Header with Network Stats */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -380,7 +529,12 @@ const Marketplace = () => {
                     </div>
                     <button 
                       className="btn btn-primary"
-                      onClick={() => handleTrade(item)}
+                      onClick={() => {
+                        setSelectedPackage(item);
+                        setIsModalOpen(true);
+                        const modal = document.getElementById('trade-modal') as HTMLDialogElement;
+                        if (modal) modal.showModal();
+                      }}
                     >
                       View Details
                       <ArrowRight className="w-4 h-4" />
@@ -515,11 +669,26 @@ const Marketplace = () => {
       </AnimatePresence>
 
       {/* Enhanced Trade Modal */}
-      <dialog id="trade-modal" className="modal">
+      <dialog 
+        id="trade-modal" 
+        className="modal"
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedPackage(null);
+        }}
+      >
         <div className="modal-box max-w-3xl">
-          <h3 className="font-bold text-2xl mb-4">Energy Optimization Package Details</h3>
+          <form method="dialog">
+            <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+          </form>
+          <h3 className="font-bold text-2xl mb-4">Energy Package Details</h3>
           {selectedPackage && (
-            <div className="space-y-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div className="stat bg-base-300 rounded-box">
                   <div className="stat-title">Package Name</div>
@@ -587,22 +756,60 @@ const Marketplace = () => {
                 </div>
               </div>
 
+              <div className="bg-base-300 p-4 rounded-lg">
+                <h4 className="font-semibold mb-2">Blockchain Details</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm opacity-70">Contract Address</p>
+                    <p className="text-xs font-mono">{process.env.REACT_APP_MARKETPLACE_CONTRACT_ADDRESS}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm opacity-70">Network</p>
+                    <p className="text-xs">{web3State.chainId === 1 ? 'Ethereum Mainnet' : 'Test Network'}</p>
+                  </div>
+                </div>
+              </div>
+
               <div className="alert alert-info">
                 <i className="fas fa-info-circle"></i>
-                <span>Implementation support and training included in package price</span>
+                <span>Transaction will be processed on the blockchain. Please ensure you have enough ETH to cover the price and gas fees.</span>
               </div>
-            </div>
+
+              <div className="modal-action">
+                <div className="flex gap-2 w-full justify-end">
+                  <button 
+                    className="btn btn-outline"
+                    onClick={() => {
+                      const modal = document.getElementById('trade-modal') as HTMLDialogElement;
+                      if (modal) modal.close();
+                      setIsModalOpen(false);
+                      setSelectedPackage(null);
+                    }}
+                  >
+                    Close
+                  </button>
+                  <button 
+                    className={`btn btn-primary ${isLoading ? 'loading' : ''}`}
+                    disabled={isLoading || !web3State.connected}
+                    onClick={() => {
+                      if (selectedPackage) {
+                        handleTrade(selectedPackage);
+                        const modal = document.getElementById('trade-modal') as HTMLDialogElement;
+                        if (modal) modal.close();
+                      }
+                    }}
+                  >
+                    {isLoading ? 'Processing...' : 'Purchase Package'}
+                    {!isLoading && <ArrowRight className="w-4 h-4 ml-2" />}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
           )}
-          <div className="modal-action">
-            <form method="dialog" className="space-x-2">
-              <button className="btn btn-ghost">Cancel</button>
-              <button className="btn btn-primary">
-                Proceed with Implementation
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </button>
-            </form>
-          </div>
         </div>
+        <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
       </dialog>
     </div>
   );

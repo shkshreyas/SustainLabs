@@ -64,7 +64,7 @@ interface UploadedFile {
 }
 
 const API_KEY = 'AIzaSyD8ycFuFWs7xEkTwGv7JIx__4j9ISAZJcg';
-const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent';
+const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 const WEATHER_API_KEY = '38bbd278ec684e78921132440240308';
 const WEATHER_API_URL = 'http://api.weatherapi.com/v1/current.json';
 
