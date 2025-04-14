@@ -1,7 +1,7 @@
 # 🌐 **SustainLabs** - AI-Powered Sustainable Energy Metaverse
 
 <div align="center">
-  <img src="demo/demo1.jpg" alt="SustainLabs Holographic Interface" width="800"/>
+  <img src="demo/demo2.png" alt="SustainLabs Holographic Interface" width="800"/>
   
   [![TypeScript](https://img.shields.io/badge/TypeScript-5.5.3-neonblue.svg?style=flat-square)](https://www.typescriptlang.org/)
   [![React](https://img.shields.io/badge/React-18.3.1-61DAFB.svg?logo=react&logoColor=white&style=flat-square)](https://reactjs.org/)
@@ -86,19 +86,29 @@ graph TD
 
 ## 🎮 **Interactive Demo** 🌐
 
-[![Holographic Demo](https://img.shields.io/badge/Enter%20Metaverse-AR/VR-red?style=for-the-badge)](https://econexus-x.vercel.app/holo)  
-[WebXR Experience](https://econexus-x.netlify.app/webxr) | [Quantum Sandbox](https://econexus-x.netlify.app/quantum)
+[![Holographic Demo](https://img.shields.io/badge/Enter%20Metaverse-AR/VR-red?style=for-the-badge)](https://sustainlabs.netlify.app)  
+[WebXR Experience](https://sustainlabs.netlify.app) | [Quantum Sandbox](https://sustainlabs.netlify.app)
 
 ---
+## 📱 Mobile Integration
+
+[![Mobile App](https://img.shields.io/badge/Download-APK-green)](https://github.com/shkshreyas/EnviroLink-APK)
+
+Companion app features:
+- On-the-go energy monitoring
+- Ai based Sustainable assistance and AI image monitoring
+- AR energy audit tool
+- Voice-controlled interface
+- Food wastage 
 
 ## 🛠️ **Installation 2077** 🔮
 
 ```bash
 # Clone metaverse repository
-quantum-clone https://github.com/Ayushdevx/EcoNexusX
+quantum-clone https://github.com/Ayushdevx/SustainLabs
 
 # Enter quantum tunnel
-cd EcoNexusX && npm quantum-install
+cd SustainLabs && npm quantum-install
 
 # Activate neural interface
 npm run brain-link
@@ -158,7 +168,7 @@ npm run brain-link
     </a>
   </div>
 </div>
----
+
 
 ## 🌐 **Metaverse Access** 🌌
 
@@ -170,7 +180,7 @@ npm run brain-link
   <span>Built with ⚡ by Team Code Red</span>
   <span>🌍 <a href="https://github.com/Ayushdevx/SustainLabs">GitHub Neuron</a> | <a href="https://github.com/Ayushdevx/SustainLabs/issues">Synaptic Issues</a></span>
 </div>
-```
+
 **Key Modernizations:**
 1. **WebXR Integration**: Full AR/VR support for immersive energy management
 2. **Quantum Computing**: Hybrid quantum-classical algorithms for optimization
