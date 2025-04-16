@@ -202,44 +202,7 @@ const EnhancedGamification = () => {
           ) : activeTab === 'interview' ? (
             <div className="card bg-base-200 shadow-xl overflow-hidden">
               <div className="card-body p-0 md:p-4">
-                <div className="flex flex-col space-y-6 p-6">
-                  <h2 className="text-2xl font-bold text-primary">Custom Interview Preparation</h2>
-                  
-                  <div className="form-control w-full">
-                    <label className="label">
-                      <span className="label-text text-base-content">Job Role</span>
-                    </label>
-                    <input 
-                      type="text" 
-                      placeholder="Enter the job role..." 
-                      className="input input-bordered w-full text-base-content bg-base-200" 
-                    />
-                  </div>
-
-                  <div className="form-control w-full">
-                    <label className="label">
-                      <span className="label-text text-base-content">Job Description</span>
-                    </label>
-                    <textarea 
-                      placeholder="Paste the job description..." 
-                      className="textarea textarea-bordered h-32 text-base-content bg-base-200"
-                    />
-                  </div>
-
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text text-base-content">Number of Questions</span>
-                    </label>
-                    <div className="flex flex-wrap gap-3">
-                      <button className="btn btn-primary">5 Questions</button>
-                      <button className="btn btn-outline">10 Questions</button>
-                      <button className="btn btn-outline">15 Questions</button>
-                      <button className="btn btn-outline">20 Questions</button>
-                    </div>
-                  </div>
-
-                  <button className="btn btn-primary w-full">Generate Interview Questions</button>
-                </div>
+                <InterviewPrep />
               </div>
             </div>
           ) : activeTab === 'resume' ? (
