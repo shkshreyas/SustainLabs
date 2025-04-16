@@ -70,7 +70,7 @@ const FloatingChatButton: React.FC<FloatingChatButtonProps> = ({ onClick }) => {
             transition={{ type: "spring", stiffness: 500, damping: 30 }}
             className="absolute -top-20 right-0 bg-gradient-to-r from-primary to-secondary text-primary-content px-5 py-3 rounded-xl shadow-lg whitespace-nowrap"
           >
-            <div className="font-medium text-sm">Ask the EcoNexus AI assistant!</div>
+            <div className="font-medium text-sm">Ask the EnviroLink AI assistant!</div>
             <div className="text-xs opacity-80 mt-1">Get sustainability insights instantly</div>
             <div className="absolute -bottom-2 right-4 w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-secondary"></div>
           </motion.div>

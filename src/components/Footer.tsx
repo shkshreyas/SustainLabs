@@ -52,7 +52,7 @@ const Footer = () => {
     contact: [
       { icon: Globe, text: 'www.ayushdevxai@gmail.com', href: '#' },
       { icon: Phone, text: '+91 9305183418', href: 'LimkedIn : AyushDevai ' },
-      { icon: Mail, text: 'contact@econexus.com', href: 'mailto:contact@econexus.com' }
+      { icon: Mail, text: 'team@envirolink.com', href: 'mailto:shkshreyaskumar@gmail.com' }
     ],
     hours: [
       { icon: Clock, text: 'Mon-Fri: 9:00 AM - 6:00 PM' },
