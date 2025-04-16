@@ -76,7 +76,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           </div>
         </div>
         <div>
-          <h2 className="font-bold">EcoNexus Assistant</h2>
+          <h2 className="font-bold">EnviroLink Assistant</h2>
           <div className="flex items-center gap-2 text-xs opacity-70">
             <div className="flex items-center">
               <Brain className="w-3 h-3 mr-1" />

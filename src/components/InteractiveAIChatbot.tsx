@@ -397,7 +397,7 @@ const FileMessage: React.FC<{
 const InteractiveAIChatbot: React.FC = () => {
   // Messages state with proper typing
   const [messages, setMessages] = useState<Message[]>([{
-    text: "👋 Hello! I'm your EcoNexus Assistant. I'm here to help you with sustainability and energy management topics. Feel free to ask me anything or share your name so I can address you personally!",
+    text: "👋 Hello! I'm your EnviroLink Assistant. I'm here to help you with sustainability and energy management topics. Feel free to ask me anything or share your name so I can address you personally!",
     isUser: false,
     timestamp: new Date().toISOString()
   }]);
@@ -899,7 +899,7 @@ const InteractiveAIChatbot: React.FC = () => {
   const clearChat = () => {
     if (window.confirm("Are you sure you want to clear this conversation?")) {
       setMessages([{
-        text: "👋 Hello! I'm your EcoNexus Assistant. I'm here to help you with sustainability and energy management topics. Feel free to ask me anything or share your name so I can address you personally!",
+        text: "👋 Hello! I'm your EnviroLink Assistant. I'm here to help you with sustainability and energy management topics. Feel free to ask me anything or share your name so I can address you personally!",
         isUser: false,
         timestamp: new Date().toISOString()
       }]);
