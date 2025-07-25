@@ -384,7 +384,7 @@ python manage.py runserver
   </div>
   
   <div style="text-align: center;">
-    <img src="https://media.licdn.com/dms/image/v2/D4D03AQHYn3mN5qka3w/profile-displayphoto-shrink_800_800/B4DZYQroy1HIAc-/0/1744036597923?e=1750896000&v=beta&t=0MBqHxffnRv3SFDpb0ofsJ1fOO-eo97ZLC845AV4R6E" width="180" height="180" style="border-radius: 50%; object-fit: cover; border: 4px solid #2196F3;"/>
+    <img src="https://media.licdn.com/dms/image/v2/D4D03AQHYn3mN5qka3w/profile-displayphoto-shrink_800_800/B4DZYQroy1HIAc-/0/1744036597923?e=1756339200&v=beta&t=J8OXjn3WqX1juw3MWKoBQNrefAqZ6WnHG16dKUNQMmw" width="180" height="180" style="border-radius: 50%; object-fit: cover; border: 4px solid #2196F3;"/>
     <h3>Shreyas Kumar</h3>
     <p>Frontend & UI/UX Lead</p>
     <a href="https://github.com/shkshreyas" style="margin-right: 10px;"><img src="https://img.shields.io/badge/GitHub-181717.svg?style=for-the-badge&logo=GitHub&logoColor=white" height="25"></a>
